@@ -44,13 +44,13 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     }
     //uniformXMove = glGetUniformLocation(shader, "xMove");
     //uniformYMove = glGetUniformLocation(shader, "yMove");
-    this->uniformModel = glGetUniformLocation(shaderID, "model");
-    this->uniformProjection = glGetUniformLocation(shaderID, "projection");
-    this->uniformView = glGetUniformLocation(shaderID, "view");
-    this->uniformAmbientColour = glGetUniformLocation(shaderID, "directionalLight.colour");
-    this->uniformAmbientIntensity = glGetUniformLocation(shaderID, "directionalLight.ambientIntensity");
-    this->uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
-    this->uniformDiffuseIntensity = glGetUniformLocation(shaderID, "directionalLight.diffuseIntensity");
+    //this->uniformModel = glGetUniformLocation(shaderID, "model");
+    //this->uniformProjection = glGetUniformLocation(shaderID, "projection");
+    //this->uniformView = glGetUniformLocation(shaderID, "view");
+    //this->uniformAmbientColour = glGetUniformLocation(shaderID, "directionalLight.colour");
+    //this->uniformAmbientIntensity = glGetUniformLocation(shaderID, "directionalLight.ambientIntensity");
+    //this->uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
+    //this->uniformDiffuseIntensity = glGetUniformLocation(shaderID, "directionalLight.diffuseIntensity");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){

@@ -16,10 +16,13 @@ int main(){
     GLint bufferHeight = window->getBufferHeight();
     glViewport(0, 0, bufferWidth, bufferHeight);
 
+    Shader * shader = new Shader();
+    shader->CreateFromFile("shaders/vertex.glsl", "shaders/fragment.glsl");
     while(!window->getShouldClose()){
         glfwPollEvents();
-        glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+        glClearColor(0.95, 0.95, 0.95, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        shader->UseShader();
         glUseProgram(0);
         window->swapBuffers();
     }
