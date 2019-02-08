@@ -1,7 +1,8 @@
 CPP=g++
 LDFLAGS= -I/inc/ -lGL -lGLEW -lglfw
 OBJDIR=build/
-depsname= Window
+# Put the dependencies files here
+depsname= Window Shader
 foldersrc=src/
 
 # Preparing full name of files & objs
@@ -18,12 +19,12 @@ TARGET=$(addprefix $(OBJDIR), $(TARGETNAME))
 #	$(CPP) -c $(LDFLAGS) $< -o $@
 $(TARGETNAME): $(depsobj)
 	$(CPP) src/main.cpp -o $(TARGET) $^ $(LDFLAGS)
+.PHONY: $(TARGETNAME)
 
-$(depsobj): $(depsfiles)
+build/%.o: src/%.cpp
 	$(CPP) -c $(LDFLAGS) $< -o $@
-
-
-.PHONY: clouds
+#$(depsobj): $(depsfiles)
+#	$(CPP) -c $(LDFLAGS) $< -o $@
 
 clean:
 	rm -f $(depsobj) $(TARGET)
@@ -31,6 +32,9 @@ clean:
 
 run:
 	./$(TARGET)
+.PHONY: run
 
+# Just for testcases
 print:
 	echo $(TARGET)
+.PHONY: print

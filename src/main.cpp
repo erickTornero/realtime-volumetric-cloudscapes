@@ -1,6 +1,7 @@
 # include <GL/glew.h>
 # include <GLFW/glfw3.h>
 # include "../inc/Window.hpp"
+# include "../inc/Shader.hpp"
 int main(){
     Window * window = new Window();
     window->Initialize("Window of Clouds");
