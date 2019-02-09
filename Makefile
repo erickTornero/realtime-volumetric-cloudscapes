@@ -2,7 +2,7 @@ CPP=g++
 LDFLAGS= -I/inc/ -lGL -lGLEW -lglfw
 OBJDIR=build/
 # Put the dependencies files here
-depsname= Window Shader Mesh
+depsname= Window Shader Mesh Camera
 foldersrc=src/
 
 # Preparing full name of files & objs

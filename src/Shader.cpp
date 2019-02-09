@@ -2,8 +2,10 @@
 
 Shader::Shader(){
     this->shaderID = 0;
-    this->uniformModel = 0;
-    this->uniformProjection = 0;
+    this->uniformScreenWidth = 0;
+    this->uniformScreenHeight = 0;
+    //this->uniformModel = 0;
+    //this->uniformProjection = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -42,6 +44,8 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
         printf("Error Validating program: '%s'\n", eLog);
         return;
     }
+    this->uniformScreenWidth = glGetUniformLocation(shaderID, "screenWidth");
+    this->uniformScreenHeight = glGetUniformLocation(shaderID, "screenHeight");
     //uniformXMove = glGetUniformLocation(shader, "xMove");
     //uniformYMove = glGetUniformLocation(shader, "yMove");
     //this->uniformModel = glGetUniformLocation(shaderID, "model");
@@ -76,7 +80,8 @@ void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shader
     }
     glAttachShader(theProgram, theShader);
 }
-GLint Shader::GetModelLocation(){
+
+/*GLint Shader::GetModelLocation(){
     return this->uniformModel;
 }
 GLint Shader::GetProjectionLocation(){
@@ -96,6 +101,12 @@ GLint Shader::GetDiffuseIntensityLocation(){
 }
 GLint Shader::GetDirectionLocation(){
     return this->uniformDirection;
+}*/
+GLint Shader::GetScreenWidthLocation(){
+    return this->uniformScreenWidth;
+}
+GLint Shader::GetScreenHeightLocation(){
+    return this->uniformScreenHeight;
 }
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
@@ -105,8 +116,10 @@ void Shader::ClearShader(){
         glDeleteProgram(this->shaderID);
         this->shaderID = 0;
     }
-    this->uniformModel = 0;
-    this->uniformProjection = 0; 
+    this->uniformScreenWidth = 0;
+    this->uniformScreenHeight = 0;
+    //this->uniformModel = 0;
+    //this->uniformProjection = 0; 
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

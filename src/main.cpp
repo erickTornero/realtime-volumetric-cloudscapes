@@ -4,7 +4,10 @@
 # include "../inc/Window.hpp"
 # include "../inc/Shader.hpp"
 # include "../inc/Mesh.hpp"
+# include "../inc/Camera.hpp"
 
+GLfloat deltaTime = 0.0f;
+GLfloat lastTime  = 0.0f;
 void calcAverageNormals(unsigned int * indexes, unsigned int indiceCount, GLfloat * vertices, unsigned int verticeCount, unsigned int vLength, unsigned int normalOffset){
     for(size_t i = 0; i < indiceCount; i+=3){
         // ** Getting the indexes of Vertexes of a triangle
@@ -76,7 +79,7 @@ Mesh * CreateQuad(){
          1.0, -1.0, -1.0
     };
     Mesh * mesh = new Mesh();
-    mesh->CreateMesh(vertices, indexes, 12, 6);
+    mesh->CreateMesh(vertices, indexes, 9, 3);
     return mesh;
 }
 
@@ -96,17 +99,27 @@ int main(){
     Mesh * quad = CreateQuad();
     Shader * shader = new Shader();
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/fragment.glsl");
+    Camera * camera = new Camera(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.3);
     while(!window->getShouldClose()){
+        GLfloat now = glfwGetTime();
+        deltaTime = now - lastTime;
+        lastTime = now;
         glfwPollEvents();
-        glClearColor(0.95, 0.95, 0.95, 1.0);
+        camera->KeyControl(window->getKeys(), deltaTime);
+        camera->MouseControl(window->getXChange(), window->getYChange());
+        glClearColor(0.0, 0.0, 0.02, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader->UseShader();
-
+        glUniform1i(shader->GetScreenWidthLocation(), bufferWidth);
+        glUniform1i(shader->GetScreenHeightLocation(), bufferHeight);
         quad->RenderMesh();
         glUseProgram(0);
         window->swapBuffers();
     }
     delete window;
+    delete shader;
+    delete camera;
+    delete quad;
     return 0;
     
 }

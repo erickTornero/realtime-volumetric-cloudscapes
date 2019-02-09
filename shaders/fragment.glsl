@@ -1,6 +1,7 @@
 #version 330
 
 out vec4 color;
+in vec2 screenPos;
 uniform float time;
 uniform vec2 resolution;
 // Define a sdf of a single sphere
@@ -54,15 +55,15 @@ vec3 getCameraRayDir(vec2 uv, vec3 camPos, vec3 camTarget)
 
 void main(){
     // Compute the camera origin
-    vec3 camPos = vec3(0, 0, -1);
+    vec3 camPos = vec3(0, 0, -10);
     vec3 camTarget = vec3(0, 0, 0);
     
-    vec2 uv = normalizeScreenCoords(gl_PointCoord);
+    vec2 uv = normalizeScreenCoords(screenPos);
 
     // Compute the ray direction
     vec3 rayDir = getCameraRayDir(uv, camPos, camTarget);
     // Compute distance & colour to one surface Raymarching
-    vec3 col = render(camPos, rayDir);
+    vec3 col = render(camPos, rayDir)/2.;
 
-    color = vec4(0.7843, 0.8275, 0.1569, 1.0);
+    color = vec4(col, 1.0);
 }
