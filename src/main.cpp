@@ -1,6 +1,7 @@
 # include <GL/glew.h>
 # include <GLFW/glfw3.h>
 # include <glm/glm.hpp>
+# include <iostream>
 # include "../inc/Window.hpp"
 # include "../inc/Shader.hpp"
 # include "../inc/Mesh.hpp"
@@ -79,7 +80,7 @@ Mesh * CreateQuad(){
          1.0, -1.0, -1.0
     };
     Mesh * mesh = new Mesh();
-    mesh->CreateMesh(vertices, indexes, 9, 3);
+    mesh->CreateMesh(vertices, indexes, 12, 6);
     return mesh;
 }
 
@@ -95,6 +96,8 @@ int main(){
     glEnable(GL_DEPTH_TEST);
     GLint bufferWidth = window->getBufferWidth();
     GLint bufferHeight = window->getBufferHeight();
+    std::cout<<"W> "<<bufferWidth<<std::endl;
+    std::cout<<"H> "<<bufferHeight<<std::endl;
     glViewport(0, 0, bufferWidth, bufferHeight);
     Mesh * quad = CreateQuad();
     Shader * shader = new Shader();

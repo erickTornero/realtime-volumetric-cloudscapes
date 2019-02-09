@@ -14,7 +14,7 @@ float sdSphere(vec3 p, float r){
     return length(p) - r;
 }
 float SDF(vec3 position){
-    float t = sdSphere(position - vec3(0.0, 0.0, 10.0), 3.0);
+    float t = sdSphere(position - vec3(0.0, 0.0, 10.0), 2.0);
     return t;
 }
 
@@ -55,15 +55,19 @@ vec3 getCameraRayDir(vec2 uv, vec3 camPos, vec3 camTarget)
 
 void main(){
     // Compute the camera origin
-    vec3 camPos = vec3(0, 0, -10);
-    vec3 camTarget = vec3(0, 0, 0);
-    
-    vec2 uv = normalizeScreenCoords(screenPos);
+    vec3 camPos = vec3(0, 0, -2);
+    vec3 camTarget = vec3(0, 0, -1);
+    float x = (gl_FragCoord.x) / 800.0 - 0.5;
+    float y = (gl_FragCoord.y) / 600.0 - 0.5;
+    vec3 v0 = vec3(x, y, 0);
+    vec3 rayDir = normalize(v0 - camPos);
+
+    //vec2 uv = normalizeScreenCoords(gl_FragCoord.xy);
 
     // Compute the ray direction
-    vec3 rayDir = getCameraRayDir(uv, camPos, camTarget);
+    //vec3 rayDir = getCameraRayDir(uv, camPos, camTarget);
     // Compute distance & colour to one surface Raymarching
-    vec3 col = render(camPos, rayDir)/2.;
+    vec3 col = render(camPos, rayDir);
 
     color = vec4(col, 1.0);
 }
