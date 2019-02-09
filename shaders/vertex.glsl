@@ -1,5 +1,11 @@
 #version 330
 
+layout (location = 0) in vec3 pos;
+
+out vec2 screenPos;
+
+uniform float screenWidth;
+uniform float screenHeight;
 void main(){
-    gl_Position = vec4(0.5, 0.5, 0.5, 1.0);
+    gl_Position = vec4(pos, 1.0);
 }

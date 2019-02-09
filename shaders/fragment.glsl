@@ -1,6 +1,6 @@
 #version 330
 
-out vec4 colour;
+out vec4 color;
 uniform float time;
 uniform vec2 resolution;
 // Define a sdf of a single sphere
@@ -64,5 +64,5 @@ void main(){
     // Compute distance & colour to one surface Raymarching
     vec3 col = render(camPos, rayDir);
 
-    colour = vec4(0.5,0.2,0.2, 1);
+    color = vec4(0.7843, 0.8275, 0.1569, 1.0);
 }
