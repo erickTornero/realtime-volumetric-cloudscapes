@@ -19,22 +19,33 @@ float SDF(vec3 position){
     float t = sdSphere(position - vec3(0.0, 0.0, 10.0), 2.0);
     return t;
 }
+vec3 estimateNormal(vec3 p) {
+    return normalize(vec3(
+        SDF(vec3(p.x + EPSILON, p.y, p.z)) -  SDF(vec3(p.x - EPSILON, p.y, p.z)),
+        SDF(vec3(p.x, p.y + EPSILON, p.z)) -  SDF(vec3(p.x, p.y - EPSILON, p.z)),
+        SDF(vec3(p.x, p.y, p.z  + EPSILON)) - SDF(vec3(p.x, p.y, p.z - EPSILON))
+    ));
+}
 
-float RayMarching(vec3 rayOrigin, vec3 rayDirection){
+vec4 RayMarching(vec3 rayOrigin, vec3 rayDirection){
     float t = 0.0;
     for(int i = 0; i < MAX_N_STEPS; i++){
         float dist = SDF(rayOrigin + rayDirection*t);
         if(dist < 0.0001*t){
-            return t;
+            vec3 normal = estimateNormal(rayOrigin + rayDirection*t);
+            return vec4(normal*0.5 + 0.5, t);
+            //return t;
         }
         t += dist;
     }
-    return -1.0;
+    return vec4(-1.0, vec3(0.0));
 }
 
 vec3 render(vec3 rayOrigin, vec3 rayDirection){
-    float t = RayMarching(rayOrigin, rayDirection);
-    vec3 col = vec3(1.0 -t*0.075);
+    //float t = RayMarching(rayOrigin, rayDirection);
+    vec4 res = RayMarching(rayOrigin, rayDirection);
+    //vec3 col = vec3(1.0 -t*0.075);
+    vec3 col = res.yzw;
     return col;
 }
 vec2 normalizeScreenCoords(vec2 screenCoord){
