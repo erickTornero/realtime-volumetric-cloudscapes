@@ -14,21 +14,25 @@ public:
 
     void CreateFromString(const char * vertexCode, const char * fragmentCode);
     void CreateFromFile(const char * fileV, const char * fileF);
-    //GLint GetProjectionLocation();
-    //GLint GetModelLocation();
-    //GLint GetViewLocation();
+    GLint GetProjectionLocation();
+    GLint GetModelLocation();
+    GLint GetViewLocation();
     //GLint GetIntensityLocation();
     //GLint GetAmbientColourLocation();
     //GLint GetDiffuseIntensityLocation();
     //GLint GetDirectionLocation();
     GLint GetScreenWidthLocation();
     GLint GetScreenHeightLocation();
+
+    GLint GetCameraPositionLocation();
     void UseShader();
     
     ~Shader();
 private:
     GLuint shaderID;
-    //GLint uniformProjection, uniformModel, uniformView, uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
+    GLint uniformProjection, uniformModel, uniformView;
+    GLint uniformCameraPosition;
+    //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
     void CompileShader(const char * vertexCode, const char * fragmentCode);
     void AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType);

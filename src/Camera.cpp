@@ -43,6 +43,13 @@ glm::mat4 Camera::calculateViewMatrix(){
     return glm::lookAt(this->position, this->position + this->front, this->up);
 }
 
+void Camera::SetPosition(glm::vec3 newPosition){
+    this->position = newPosition;
+}
+glm::vec3 Camera::getCameraPosition(){
+    return this->position;
+}
+
 Camera::~Camera(){
 
 }

@@ -1,6 +1,8 @@
 # include <GL/glew.h>
 # include <GLFW/glfw3.h>
 # include <glm/glm.hpp>
+# include <glm/gtc/matrix_transform.hpp>
+# include <glm/gtc/type_ptr.hpp>
 # include <iostream>
 # include "../inc/Window.hpp"
 # include "../inc/Shader.hpp"
@@ -100,9 +102,11 @@ int main(){
     std::cout<<"H> "<<bufferHeight<<std::endl;
     glViewport(0, 0, bufferWidth, bufferHeight);
     Mesh * quad = CreateQuad();
+    Mesh * quadstatic = CreateQuad();
     Shader * shader = new Shader();
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/fragment.glsl");
-    Camera * camera = new Camera(glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.3);
+    Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.3);
+    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
     while(!window->getShouldClose()){
         GLfloat now = glfwGetTime();
         deltaTime = now - lastTime;
@@ -110,12 +114,37 @@ int main(){
         glfwPollEvents();
         camera->KeyControl(window->getKeys(), deltaTime);
         camera->MouseControl(window->getXChange(), window->getYChange());
-        glClearColor(0.0, 0.0, 0.02, 1.0);
+        glClearColor(0.74, 0.84, 0.02, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader->UseShader();
+
+        /*
+         *   Camera plane model
+        */
+        glm::mat4 model(1.0f);
+        model = glm::translate(model, glm::vec3(-1.2f, -2.0, -2.5f));
+        glm::vec4 postemp = model*glm::vec4(0.0,0.0,0.0, 1.0);
+        std::cout<<"("<<camera->getCameraPosition().x<<", "<<camera->getCameraPosition().y<<", "<<camera->getCameraPosition().z<<")"<<std::endl;
+        //camera->SetPosition(glm::vec3(postemp.x, postemp.y, postemp.z) - glm::vec3(0.0, 0.0, -2.0));
+        glUniformMatrix4fv(shader->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(shader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(shader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
+        glUniform3fv(shader->GetCameraPositionLocation(), 1, glm::value_ptr(camera->getCameraPosition()));
+        quad->RenderMesh();
+
+        /*
+         *  Static Quad model
+         */ 
+        /*model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0, -5.0f, -4.0f));
+        model = glm::rotate(model, (glm::mediump_float)90*0.0175f, glm::vec3(0.8f, 0.0f, 0.0f));
+        glUniformMatrix4fv(shader->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
+        quadstatic->RenderMesh();
+        */
+        //glUniform()
         glUniform1i(shader->GetScreenWidthLocation(), bufferWidth);
         glUniform1i(shader->GetScreenHeightLocation(), bufferHeight);
-        quad->RenderMesh();
+        
         glUseProgram(0);
         window->swapBuffers();
     }

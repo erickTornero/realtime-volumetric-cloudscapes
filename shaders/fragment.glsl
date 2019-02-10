@@ -4,6 +4,8 @@ out vec4 color;
 in vec2 screenPos;
 uniform float time;
 uniform vec2 resolution;
+uniform vec3 cameraPosition;
+in vec3 cameraP;
 // Define a sdf of a single sphere
 float EPSILON = 0.004;
 int MAX_N_STEPS = 200;
@@ -55,10 +57,11 @@ vec3 getCameraRayDir(vec2 uv, vec3 camPos, vec3 camTarget)
 
 void main(){
     // Compute the camera origin
-    vec3 camPos = vec3(0, 0, -2);
-    vec3 camTarget = vec3(0, 0, -1);
-    float x = (gl_FragCoord.x) / 800.0 - 0.5;
-    float y = (gl_FragCoord.y) / 600.0 - 0.5;
+    // vec3 camPos = vec3(0, 0, -5);
+     vec3 camPos = cameraPosition;// - vec3(0 , 0, -2.0);
+    // vec3 camTarget = vec3(0, 0, -1);
+    float x = (gl_FragCoord.x) / 400.0 - 1.0;
+    float y = (gl_FragCoord.y) / 400.0 - 1.0;
     vec3 v0 = vec3(x, y, 0);
     vec3 rayDir = normalize(v0 - camPos);
 

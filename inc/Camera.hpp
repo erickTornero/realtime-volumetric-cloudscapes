@@ -16,6 +16,8 @@ public:
     glm::mat4 calculateViewMatrix();
 
     void KeyControl(bool * keys, GLfloat dTime);
+    void SetPosition(glm::vec3 newPosition);
+    glm::vec3 getCameraPosition();
     void MouseControl(GLfloat xChange, GLfloat yChange);
     ~Camera();
 

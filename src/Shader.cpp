@@ -4,6 +4,7 @@ Shader::Shader(){
     this->shaderID = 0;
     this->uniformScreenWidth = 0;
     this->uniformScreenHeight = 0;
+    this->uniformCameraPosition = 0;
     //this->uniformModel = 0;
     //this->uniformProjection = 0;
 }
@@ -48,13 +49,14 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformScreenHeight = glGetUniformLocation(shaderID, "screenHeight");
     //uniformXMove = glGetUniformLocation(shader, "xMove");
     //uniformYMove = glGetUniformLocation(shader, "yMove");
-    //this->uniformModel = glGetUniformLocation(shaderID, "model");
-    //this->uniformProjection = glGetUniformLocation(shaderID, "projection");
-    //this->uniformView = glGetUniformLocation(shaderID, "view");
+    this->uniformModel = glGetUniformLocation(shaderID, "model");
+    this->uniformProjection = glGetUniformLocation(shaderID, "projection");
+    this->uniformView = glGetUniformLocation(shaderID, "view");
     //this->uniformAmbientColour = glGetUniformLocation(shaderID, "directionalLight.colour");
     //this->uniformAmbientIntensity = glGetUniformLocation(shaderID, "directionalLight.ambientIntensity");
     //this->uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
     //this->uniformDiffuseIntensity = glGetUniformLocation(shaderID, "directionalLight.diffuseIntensity");
+    this->uniformCameraPosition = glGetUniformLocation(shaderID, "cameraPosition");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -81,7 +83,7 @@ void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shader
     glAttachShader(theProgram, theShader);
 }
 
-/*GLint Shader::GetModelLocation(){
+GLint Shader::GetModelLocation(){
     return this->uniformModel;
 }
 GLint Shader::GetProjectionLocation(){
@@ -89,7 +91,7 @@ GLint Shader::GetProjectionLocation(){
 }
 GLint Shader::GetViewLocation(){
     return this->uniformView;
-}
+}/*
 GLint Shader::GetAmbientColourLocation(){
     return this->uniformAmbientColour;
 }
@@ -108,6 +110,10 @@ GLint Shader::GetScreenWidthLocation(){
 GLint Shader::GetScreenHeightLocation(){
     return this->uniformScreenHeight;
 }
+
+GLint Shader::GetCameraPositionLocation(){
+    return this->uniformCameraPosition;
+}
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -118,8 +124,9 @@ void Shader::ClearShader(){
     }
     this->uniformScreenWidth = 0;
     this->uniformScreenHeight = 0;
-    //this->uniformModel = 0;
-    //this->uniformProjection = 0; 
+    this->uniformModel = 0;
+    this->uniformProjection = 0; 
+    this->uniformCameraPosition = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;
