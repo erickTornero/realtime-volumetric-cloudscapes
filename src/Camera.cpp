@@ -49,7 +49,15 @@ void Camera::SetPosition(glm::vec3 newPosition){
 glm::vec3 Camera::getCameraPosition(){
     return this->position;
 }
-
+glm::vec3 Camera::getCameraFront(){
+    return this->front;
+}
+glm::vec3 Camera::getCameraUp(){
+    return this->up;
+}
+glm::vec3 Camera::getCameraRight(){
+    return this->right;
+}
 Camera::~Camera(){
 
 }

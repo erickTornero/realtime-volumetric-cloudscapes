@@ -11,6 +11,7 @@ uniform vec3 cameraUp;
 uniform vec3 cameraRight;
 uniform vec3 cameraWorldUp;
 uniform mat4 model;
+uniform mat4 view;
 uniform float screenWidth;
 uniform float screenHeight;
 uniform vec2 MouseXY;
@@ -86,29 +87,53 @@ mat3 setCamera(vec3 ro, vec3 ta, float cr )
 	vec3 cv = normalize( cross(cu,cw) );
     return mat3( cu, cv, cw );
 }
-
+mat4 viewMatrix(vec3 front, vec3 right, vec3 up) {
+	/*vec3 f = normalize(center - eye);
+	vec3 s = normalize(cross(f, up));
+	vec3 u = cross(s, f);
+	return mat4(
+		vec4(s, 0.0),
+		vec4(u, 0.0),
+		vec4(-f, 0.0),
+		vec4(0.0, 0.0, 0.0, 1)
+	);*/
+    return mat4(
+        vec4(right, 0.0),
+        vec4(up, 0.0),
+        vec4(-front, 0.0),
+        vec4(0.0, 0.0, 0.0, 1.0)
+    );
+}
 void main(){
     // Compute the camera origin
-    //vec3 camPos = vec3(0, 0, -5);
+    //vec3 camPos = vec3(0, 0, -0.01);
+    float aspectratio = screenWidth/screenHeight;
     //camPos += vec3(sin(0.5*Time)*0.5, cos(0.5*Time)*0.1, 0.0);
+    //vec3 camPos = model * vec4(0.0, 0.0, -5.0, 1.0);
     vec3 camPos = cameraPosition;// - vec3(0 , 0, -2.0);
     // vec3 camTarget = vec3(0, 0, -1);
     vec2 m = vec2(MouseXY.x/screenWidth, MouseXY.y/screenHeight);
     vec3 r0 = 4.0*normalize(vec3(sin(3.0*m.x), 0.4*m.y, cos(3.0*m.x)));
-    float x = 2.0 * (gl_FragCoord.x) / screenWidth - 0.5;
-    float y = 2.0 * (gl_FragCoord.y) / screenWidth - 0.5;
-    //vec3 v0 = vec3(x, y, cameraPosition.z + 5);
-    vec3 v0 = vec3(x, y, r0.z + 20);
-    vec3 rayDir = normalize(v0 - camPos);
+    float x = aspectratio * (2.0 * (gl_FragCoord.x) / screenWidth - 1.0);
+    float y = 2.0 * (gl_FragCoord.y) / screenHeight - 1.0;
+    //vec3 v0 = view * vec3(x, y, 0.0);
+    vec3 v0 = (view * vec4(x, y, 0.0, 1.0)).xyz;
+    //vec3 v0 = (viewMatrix(cameraFront, cameraRight, cameraUp) * vec4(x, y, camPos.z + 0.2, 1.0)).xyz;
+    //vec3 rayDir = normalize(v0 - camPos);
+    vec3 rayDir = cameraFront
+             + cross(cameraFront, cameraUp) * (x)
++ cameraUp * (y); 
+    rayDir = normalize(rayDir);
+    //vec4 rr = view * model * vec4(rayDir, 0.0);
     mat3 ca = setCamera(r0, v0, 0.0);
-    vec3 rd = ca * normalize(vec3(-vec2(screenWidth, screenHeight)/screenHeight + 2.0*gl_FragCoord.xy/screenHeight, 1.5));
+    //vec3 rd = ca * normalize(vec3(-vec2(screenWidth, screenHeight)/screenHeight + 2.0*gl_FragCoord.xy/screenHeight, 1.5));
 
     //vec2 uv = normalizeScreenCoords(gl_FragCoord.xy);
 
     // Compute the ray direction
     //vec3 rayDir = getCameraRayDir(uv, camPos, camTarget);
     // Compute distance & colour to one surface Raymarching
-    vec3 col = render(camPos, rd);
+    vec3 col = render(camPos, rayDir);
 
     color = vec4(col, 1.0);
 }

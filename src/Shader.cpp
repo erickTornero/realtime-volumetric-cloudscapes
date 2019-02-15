@@ -61,6 +61,9 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformCameraPosition = glGetUniformLocation(shaderID, "cameraPosition");
     this->uniformTime = glGetUniformLocation(shaderID, "Time");
     this->uniformMouseXY = glGetUniformLocation(shaderID, "MouseXY");
+    this->uniformCamForward = glGetUniformLocation(shaderID, "cameraFront");
+    this->uniformCamUp = glGetUniformLocation(shaderID, "cameraUp");
+    this->uniformCamRight = glGetUniformLocation(shaderID, "cameraRight");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -124,6 +127,15 @@ GLint Shader::GetTimeLocation(){
 GLint Shader::GetMouseXYLocation(){
     return this->uniformMouseXY;
 }
+GLint Shader::GetCamForwardLocation(){
+    return this->uniformCamForward;
+}
+GLint Shader::GetCamUpLocation(){
+    return this->uniformCamUp;
+}
+GLint Shader::GetCamRightLocation(){
+    return this->uniformCamRight;
+}
 
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
@@ -140,6 +152,9 @@ void Shader::ClearShader(){
     this->uniformCameraPosition = 0;
     this->uniformTime = 0;
     this->uniformMouseXY = 0;
+    this->uniformCamForward = 0;
+    this->uniformCamUp = 0;
+    this->uniformCamRight = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

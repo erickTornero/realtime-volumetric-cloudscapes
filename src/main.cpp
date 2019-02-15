@@ -130,6 +130,9 @@ int main(){
         glUniformMatrix4fv(shader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(shader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
         glUniform3fv(shader->GetCameraPositionLocation(), 1, glm::value_ptr(camera->getCameraPosition()));
+        glUniform3fv(shader->GetCamForwardLocation(),1, glm::value_ptr(camera->getCameraFront()));
+        glUniform3fv(shader->GetCamUpLocation(),1, glm::value_ptr(camera->getCameraUp()));
+        glUniform3fv(shader->GetCamRightLocation(),1, glm::value_ptr(camera->getCameraRight()));
         //glUniform1f()
         glUniform1f(shader->GetTimeLocation(), now);
         glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
