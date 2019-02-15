@@ -2,13 +2,25 @@
 
 out vec4 color;
 in vec2 screenPos;
-uniform float time;
+uniform float Time;
 uniform vec2 resolution;
+// Camera Parameters
 uniform vec3 cameraPosition;
+uniform vec3 cameraFront;
+uniform vec3 cameraUp;
+uniform vec3 cameraRight;
+uniform vec3 cameraWorldUp;
+uniform mat4 model;
+uniform float screenWidth;
+uniform float screenHeight;
+uniform vec2 MouseXY;
 in vec3 cameraP;
 // Define a sdf of a single sphere
 float EPSILON = 0.004;
 int MAX_N_STEPS = 200;
+// Camera Parameters
+float CameraSpeed = 5.0;
+
 
 // Sphere centered in the origin
 // with radius 's'
@@ -66,22 +78,37 @@ vec3 getCameraRayDir(vec2 uv, vec3 camPos, vec3 camTarget)
     return vDir;
 }
 
+mat3 setCamera(vec3 ro, vec3 ta, float cr )
+{
+	vec3 cw = normalize(ta-ro);
+	vec3 cp = vec3(sin(cr), cos(cr),0.0);
+	vec3 cu = normalize( cross(cw,cp) );
+	vec3 cv = normalize( cross(cu,cw) );
+    return mat3( cu, cv, cw );
+}
+
 void main(){
     // Compute the camera origin
-    // vec3 camPos = vec3(0, 0, -5);
-     vec3 camPos = cameraPosition;// - vec3(0 , 0, -2.0);
+    //vec3 camPos = vec3(0, 0, -5);
+    //camPos += vec3(sin(0.5*Time)*0.5, cos(0.5*Time)*0.1, 0.0);
+    vec3 camPos = cameraPosition;// - vec3(0 , 0, -2.0);
     // vec3 camTarget = vec3(0, 0, -1);
-    float x = (gl_FragCoord.x) / 400.0 - 1.0;
-    float y = (gl_FragCoord.y) / 400.0 - 1.0;
-    vec3 v0 = vec3(x, y, 0);
+    vec2 m = vec2(MouseXY.x/screenWidth, MouseXY.y/screenHeight);
+    vec3 r0 = 4.0*normalize(vec3(sin(3.0*m.x), 0.4*m.y, cos(3.0*m.x)));
+    float x = 2.0 * (gl_FragCoord.x) / screenWidth - 0.5;
+    float y = 2.0 * (gl_FragCoord.y) / screenWidth - 0.5;
+    //vec3 v0 = vec3(x, y, cameraPosition.z + 5);
+    vec3 v0 = vec3(x, y, r0.z + 20);
     vec3 rayDir = normalize(v0 - camPos);
+    mat3 ca = setCamera(r0, v0, 0.0);
+    vec3 rd = ca * normalize(vec3(-vec2(screenWidth, screenHeight)/screenHeight + 2.0*gl_FragCoord.xy/screenHeight, 1.5));
 
     //vec2 uv = normalizeScreenCoords(gl_FragCoord.xy);
 
     // Compute the ray direction
     //vec3 rayDir = getCameraRayDir(uv, camPos, camTarget);
     // Compute distance & colour to one surface Raymarching
-    vec3 col = render(camPos, rayDir);
+    vec3 col = render(camPos, rd);
 
     color = vec4(col, 1.0);
 }

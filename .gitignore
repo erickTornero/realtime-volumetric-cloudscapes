@@ -2,3 +2,5 @@
 *.out
 *.exe
 clouds
+
+.vscode/

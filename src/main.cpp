@@ -124,12 +124,15 @@ int main(){
         glm::mat4 model(1.0f);
         model = glm::translate(model, glm::vec3(-1.2f, -2.0, -2.5f));
         glm::vec4 postemp = model*glm::vec4(0.0,0.0,0.0, 1.0);
-        std::cout<<"("<<camera->getCameraPosition().x<<", "<<camera->getCameraPosition().y<<", "<<camera->getCameraPosition().z<<")"<<std::endl;
+        //std::cout<<"("<<camera->getCameraPosition().x<<", "<<camera->getCameraPosition().y<<", "<<camera->getCameraPosition().z<<")"<<std::endl;
         //camera->SetPosition(glm::vec3(postemp.x, postemp.y, postemp.z) - glm::vec3(0.0, 0.0, -2.0));
         glUniformMatrix4fv(shader->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(shader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(shader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
         glUniform3fv(shader->GetCameraPositionLocation(), 1, glm::value_ptr(camera->getCameraPosition()));
+        //glUniform1f()
+        glUniform1f(shader->GetTimeLocation(), now);
+        glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
 
         /*
@@ -142,8 +145,8 @@ int main(){
         quadstatic->RenderMesh();
         */
         //glUniform()
-        glUniform1i(shader->GetScreenWidthLocation(), bufferWidth);
-        glUniform1i(shader->GetScreenHeightLocation(), bufferHeight);
+        glUniform1f(shader->GetScreenWidthLocation(), GLfloat(bufferWidth));
+        glUniform1f(shader->GetScreenHeightLocation(), GLfloat(bufferHeight));
         
         glUseProgram(0);
         window->swapBuffers();

@@ -25,6 +25,8 @@ public:
     GLint GetScreenHeightLocation();
 
     GLint GetCameraPositionLocation();
+    GLint GetTimeLocation();
+    GLint GetMouseXYLocation();
     void UseShader();
     
     ~Shader();
@@ -32,6 +34,8 @@ private:
     GLuint shaderID;
     GLint uniformProjection, uniformModel, uniformView;
     GLint uniformCameraPosition;
+    GLint uniformTime;
+    GLint uniformMouseXY;
     //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
     void CompileShader(const char * vertexCode, const char * fragmentCode);

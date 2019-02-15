@@ -7,6 +7,8 @@ Shader::Shader(){
     this->uniformCameraPosition = 0;
     //this->uniformModel = 0;
     //this->uniformProjection = 0;
+    this->uniformTime = 0;
+    this->uniformMouseXY = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -57,6 +59,8 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     //this->uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
     //this->uniformDiffuseIntensity = glGetUniformLocation(shaderID, "directionalLight.diffuseIntensity");
     this->uniformCameraPosition = glGetUniformLocation(shaderID, "cameraPosition");
+    this->uniformTime = glGetUniformLocation(shaderID, "Time");
+    this->uniformMouseXY = glGetUniformLocation(shaderID, "MouseXY");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -114,6 +118,13 @@ GLint Shader::GetScreenHeightLocation(){
 GLint Shader::GetCameraPositionLocation(){
     return this->uniformCameraPosition;
 }
+GLint Shader::GetTimeLocation(){
+    return this->uniformTime;
+}
+GLint Shader::GetMouseXYLocation(){
+    return this->uniformMouseXY;
+}
+
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -127,6 +138,8 @@ void Shader::ClearShader(){
     this->uniformModel = 0;
     this->uniformProjection = 0; 
     this->uniformCameraPosition = 0;
+    this->uniformTime = 0;
+    this->uniformMouseXY = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;
