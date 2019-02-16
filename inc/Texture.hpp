@@ -16,7 +16,7 @@ public:
     bool LoadTexture3D();
 
     void UseTexture();
-    void UseTexture3D();
+    void UseTexture3D(GLint);
 
     void ClearTexture();
     ~Texture();

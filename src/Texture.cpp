@@ -70,8 +70,10 @@ bool Texture::LoadTexture3D(){
     printf("depth>%i\n", this->bitDepht);
     return true;
 }
-void Texture::UseTexture3D(){
+void Texture::UseTexture3D(GLint textureLocation){
+
     glActiveTexture(GL_TEXTURE0);
+    glUniform1i(textureLocation, 0);
     glBindTexture(GL_TEXTURE_3D, this->textureID);
 }
 

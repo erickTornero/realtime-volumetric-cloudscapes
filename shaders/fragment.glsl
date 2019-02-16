@@ -15,6 +15,8 @@ uniform mat4 view;
 uniform float screenWidth;
 uniform float screenHeight;
 uniform vec2 MouseXY;
+// Variable for sample textures
+uniform sampler3D lowFrequencyTexture;
 in vec3 cameraP;
 // Define a sdf of a single sphere
 float EPSILON = 0.004;
@@ -55,14 +57,22 @@ vec4 RayMarching(vec3 rayOrigin, vec3 rayDirection){
         }
         t += dist;
     }
-    return vec4(-1.0, vec3(0.0));
+    return vec4( vec3(0.0), -1.0);
 }
 
 vec3 render(vec3 rayOrigin, vec3 rayDirection){
     //float t = RayMarching(rayOrigin, rayDirection);
     vec4 res = RayMarching(rayOrigin, rayDirection);
     //vec3 col = vec3(1.0 -t*0.075);
-    vec3 col = res.yzw;
+    //float smp = texture(lowFrequencyTexture, vec3(0.2, 0.2, 0.2)).x;
+    //vec3 dd = vec3()
+    vec4 smp = texture(lowFrequencyTexture, res.xyz);
+    vec3 col;// = smp * res.yzw;
+    if(res.w < 0.0){
+        col = vec3(0.0);
+    }else{
+        col = normalize(smp.xyz);
+    }
     return col;
 }
 vec2 normalizeScreenCoords(vec2 screenCoord){

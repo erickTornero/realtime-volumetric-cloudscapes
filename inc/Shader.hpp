@@ -31,6 +31,9 @@ public:
     GLint GetCamUpLocation();
     GLint GetCamRightLocation();
 
+    // 3D texture sampler
+    GLint GetLowFreqTextureLocation();
+
     void UseShader();
     
     ~Shader();
@@ -43,6 +46,7 @@ private:
     GLint uniformCamForward;
     GLint uniformCamUp;
     GLint uniformCamRight;
+    GLint uniformLowFreqTexture;
     //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
     void CompileShader(const char * vertexCode, const char * fragmentCode);

@@ -64,6 +64,7 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformCamForward = glGetUniformLocation(shaderID, "cameraFront");
     this->uniformCamUp = glGetUniformLocation(shaderID, "cameraUp");
     this->uniformCamRight = glGetUniformLocation(shaderID, "cameraRight");
+    this->uniformLowFreqTexture = glGetUniformLocation(shaderID, "lowFrequencyTexture");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -136,6 +137,9 @@ GLint Shader::GetCamUpLocation(){
 GLint Shader::GetCamRightLocation(){
     return this->uniformCamRight;
 }
+GLint Shader::GetLowFreqTextureLocation(){
+    return this->uniformLowFreqTexture;
+}
 
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
@@ -155,6 +159,7 @@ void Shader::ClearShader(){
     this->uniformCamForward = 0;
     this->uniformCamUp = 0;
     this->uniformCamRight = 0;
+    this->uniformLowFreqTexture = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

@@ -28,7 +28,7 @@ int Window::Initialize(const char * nameW = "My Window"){
 
     //handle key & mouse
     this->createCallbacks();
-    glfwSetInputMode(this->mainWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(this->mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     //test
     glfwSetWindowUserPointer(this->mainWindow, this);
 }
