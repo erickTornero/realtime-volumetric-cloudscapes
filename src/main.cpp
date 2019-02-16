@@ -1,3 +1,4 @@
+
 # include <GL/glew.h>
 # include <GLFW/glfw3.h>
 # include <glm/glm.hpp>
@@ -8,6 +9,7 @@
 # include "../inc/Shader.hpp"
 # include "../inc/Mesh.hpp"
 # include "../inc/Camera.hpp"
+# include "../inc/Texture.hpp"
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime  = 0.0f;
@@ -104,6 +106,9 @@ int main(){
     Mesh * quad = CreateQuad();
     Mesh * quadstatic = CreateQuad();
     Shader * shader = new Shader();
+    Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
+    lowfreqTexture->LoadTexture3D();
+    //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/fragment.glsl");
     Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.3);
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
@@ -158,6 +163,7 @@ int main(){
     delete shader;
     delete camera;
     delete quad;
+    delete lowfreqTexture;
     return 0;
     
 }

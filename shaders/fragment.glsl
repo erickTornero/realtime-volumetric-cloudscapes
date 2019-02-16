@@ -28,8 +28,12 @@ float CameraSpeed = 5.0;
 float sdSphere(vec3 p, float r){
     return length(p) - r;
 }
+float sdPlane( vec3 p){
+    return p.y;
+}
 float SDF(vec3 position){
-    float t = sdSphere(position - vec3(0.0, 0.0, 10.0), 2.0);
+    float t = sdSphere(position - vec3(0.0, 0.0, -100.0), 2.0);
+    //float t = sdPlane(position);
     return t;
 }
 vec3 estimateNormal(vec3 p) {
@@ -120,9 +124,7 @@ void main(){
     vec3 v0 = (view * vec4(x, y, 0.0, 1.0)).xyz;
     //vec3 v0 = (viewMatrix(cameraFront, cameraRight, cameraUp) * vec4(x, y, camPos.z + 0.2, 1.0)).xyz;
     //vec3 rayDir = normalize(v0 - camPos);
-    vec3 rayDir = cameraFront
-             + cross(cameraFront, cameraUp) * (x)
-+ cameraUp * (y); 
+    vec3 rayDir = 10.0*cameraFront + cameraRight * (x) + cameraUp * (y); 
     rayDir = normalize(rayDir);
     //vec4 rr = view * model * vec4(rayDir, 0.0);
     mat3 ca = setCamera(r0, v0, 0.0);
