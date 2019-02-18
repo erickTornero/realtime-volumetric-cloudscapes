@@ -21,9 +21,23 @@ vec3 GetRayDirection(vec3 front, vec3 right, vec3 up, float x, float y){
     vec3 ray = 10 * front + right * x + up * y;
     return normalize(ray);
 }
-float getHeightInAtmosphere()
+vec3 GetIntersectionRay2Sphere(vec3 rayOrigin, vec3 rayDirection, vec3 sphereCenter, float radius){
+    
+}
+float getHeightInAtmosphere(vec3 pointInAtm, vec3 earthCenter, vec3 intersectionRay2InnerAtm, vec3 rayDirection, vec3 eyePos, float atmThick){
+    float distanceCamera2Point = length(pointInAtm - eyePos);
+    float distanceCamera2InnerAtm = length(intersectionRay2InnerAtm - eye);
+    // Asumming module of Ray direction
+    vec3 point2EarthCenter = normalize(pointInAtm - earthCenter);
 
-vec4 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 earthCenter, float start_atm, float end_atm){
+    float cosThet = dot(rayDirection, point2EarthCenter);
+    
+    float posInAtm = abs(cosThet * (distanceCamera2Point - distanceCamera2InnerAtm));
+
+    return posInAtm/atmThick;
+}
+
+vec4 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3 earthCenter, float start_atm, float end_atm){
     const float atmosphereThickness = end_atm - start_atm;
     //TODO: Check if maxNSteps is Ok!
     const float maxNSteps = 200.0;
@@ -36,6 +50,10 @@ vec4 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 earthCenter, float star
 
         // Compute position
         vec3 pos = rayOrigin + t * rayDirection;
+
+        float relativeHeight = getHeightInAtmosphere(pos, earthCenter, xx, rayDirection, rayOrigin, atmosphereThickness);
+
+
 
     }
 }
