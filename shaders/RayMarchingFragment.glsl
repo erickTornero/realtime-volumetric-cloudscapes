@@ -24,6 +24,19 @@ const float EARTH_RADIUS = 6378000.0;
 const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 10000.0;
 const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + 10000.0;
 
+/*
+ *  @brief
+ *  remaping
+ */
+float remapClamped(float value, float old_min, float old_max, float new_min, float new_max){
+    float v = new_min +((value - old_min)/ (old_max - old_min))*(new_max - new_min);
+    return clamp(v, new_min, new_max);
+}
+float remapClampPrevPost(float value, float old_min, float old_max, float new_min, float new_max){
+    value = clamp(value, old_min, old_max);
+    return remapClamped(value, old_min, old_max, new_min, new_max);
+}
+
 vec3 GetRayDirection(vec3 front, vec3 right, vec3 up, float x, float y){
     vec3 ray = 10 * front + right * x + up * y;
     return normalize(ray);
@@ -63,9 +76,13 @@ float GetHeightInAtmosphere(vec3 pointInAtm, vec3 earthCenter, vec3 intersection
 
     return posInAtm/atmThick;
 }
-
+/*
+ * ** Relative position in atmosphere
+ */
 vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter){
-    return vec3(0.0);
+    vec3 posit = (pos - vec3(earthCenter.x, ATMOSPHERE_INNER_RADIUS - EARTH_RADIUS, earthCenter.x))/10000.0;
+
+    return posit;
 }
 /* 
  * @brief:
@@ -74,10 +91,16 @@ vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter){
 float sampleLowFrequencyTexture(vec3 pointSample){
     // 3D texture sampled 4 channels RGBA
     vec4 sampledTexture = texture(lowFrequencyTexture, pointSample);
-    float value = sampledTexture.y * 0.625 + sampledTexture.z * 0.25 + sampledTexture.w * 0.125;
+    float valueFBM = sampledTexture.y * 0.625 + sampledTexture.z * 0.25 + sampledTexture.w * 0.125;
 
-    value = clamp(value, 0.0, 1.0);
-    return value;
+    valueFBM = clamp(valueFBM, 0.0, 1.0);
+    float coverage = 0.6;
+    float baseCloud = remapClamped(sampledTexture.x, (valueFBM - 0.9), 1.0, 0.0, 1.0);
+    float baseCloudCoverage = remapClampPrevPost(baseCloud, coverage, 1.0, 0.0, 1.0);
+
+    baseCloudCoverage *= coverage;
+
+    return baseCloudCoverage;
 }
 
 vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3 earthCenter, float start_atm, float end_atm){
@@ -86,6 +109,7 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
     float maxNSteps = 200.0;
     float incrementAtm = atmosphereThickness/maxNSteps;
 
+    float acummDensity = 0.0;
     vec3 colorPixel = vec3(0.0);
     // Start Ray marching
     for(float t = start_atm; t < end_atm; t += incrementAtm){
@@ -97,11 +121,18 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
         float relativeHeight = GetHeightInAtmosphere(pos, earthCenter, innerIntersection, rayDirection, rayOrigin, atmosphereThickness);
 
         // Warn: Hardcoded variable
-        vec3 pointSampled = vec3(0.6, 0.0, 0.6);
+        vec3 pointSampled = GetPositionInAtmosphere(pos, earthCenter);//vec3(0.6, 0.0, 0.6);
 
         float baseCloud = sampleLowFrequencyTexture(pointSampled);
+        if(baseCloud > 0.0){
+            acummDensity += baseCloud *0.5;
+            colorPixel += vec3(acummDensity * 0.01);
+        }
+        if(acummDensity >= 1.0){
+            acummDensity = 1.0;
+            break;
+        }
 
-        colorPixel += vec3(baseCloud * 0.005);
     }
     return colorPixel;
 }
@@ -123,6 +154,17 @@ void main(){
     float initialLength = length(innerIntersection - rayOrigin);
     float finalLength = length(outerIntersection - rayOrigin);
 
+    float seeingUp = dot(vec3(0.0, 1.0, 0.0), rayDirection);
+    if(seeingUp < 0.0){
+        vec3 colorNearHorizon = vec3(0.0, 0.16, 0.51) * 0.4;
+        color =  vec4(colorNearHorizon, 1.0);
+        return;
+    }
+    else if(seeingUp < 0.06){
+        vec3 colorHorizon = vec3(0.3, 0.32, 0.51) * 0.4;
+        color =  vec4(colorHorizon, 1.0);
+        return;
+    }
     vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
 
     color = vec4(col, 1.0);
