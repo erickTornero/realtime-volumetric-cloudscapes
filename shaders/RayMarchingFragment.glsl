@@ -22,7 +22,8 @@ struct Ray{
 // Earth radius in meters
 const float EARTH_RADIUS = 6378000.0;
 const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 10000.0;
-const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + 10000.0;
+const float ATMOSPHERE_THICKNESS = 10000.0;
+const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + ATMOSPHERE_THICKNESS;
 
 /*
  *  @brief
@@ -94,7 +95,7 @@ float sampleLowFrequencyTexture(vec3 pointSample){
     float valueFBM = sampledTexture.y * 0.625 + sampledTexture.z * 0.25 + sampledTexture.w * 0.125;
 
     valueFBM = clamp(valueFBM, 0.0, 1.0);
-    float coverage = 0.6;
+    float coverage = 0.75;
     float baseCloud = remapClamped(sampledTexture.x, (valueFBM - 0.9), 1.0, 0.0, 1.0);
     float baseCloudCoverage = remapClampPrevPost(baseCloud, coverage, 1.0, 0.0, 1.0);
 
@@ -126,7 +127,7 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
         float baseCloud = sampleLowFrequencyTexture(pointSampled);
         if(baseCloud > 0.0){
             acummDensity += baseCloud *0.5;
-            colorPixel += vec3(acummDensity * 0.01);
+            colorPixel += vec3(acummDensity );
         }
         if(acummDensity >= 1.0){
             acummDensity = 1.0;
