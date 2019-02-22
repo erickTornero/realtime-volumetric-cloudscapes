@@ -55,9 +55,9 @@ vec3 GetIntersectionRay2Sphere(vec3 rayOrigin, vec3 rayDirection, vec3 sphereCen
         return vec3(-1.0);
     }
     else{
-        t = (-b - discriminant)/(2.0 * a);
+        t = (-b - sqrt(discriminant))/(2.0 * a);
         if(t < 0.0)
-            t = (-b + discriminant)/(2.0 * a);
+            t = (-b + sqrt(discriminant))/(2.0 * a);
     }
     return rayOrigin + t * rayDirection;
 }
@@ -147,7 +147,7 @@ void main(){
     vec3 rayDirection = GetRayDirection(cameraFront, cameraRight, cameraUp, x, y);
 
     // ** Start Variables to Ray Marching
-    vec3 earthCenter = rayOrigin - vec3(0.0, EARTH_RADIUS, 0.0);
+    vec3 earthCenter = vec3(rayOrigin.x, rayOrigin.y - EARTH_RADIUS, rayOrigin.z);
     vec3 innerIntersection = GetIntersectionRay2Sphere(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_INNER_RADIUS);
     vec3 outerIntersection = GetIntersectionRay2Sphere(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_OUTER_RADIUS);
 
