@@ -33,6 +33,8 @@ public:
 
     // 3D texture sampler
     GLint GetLowFreqTextureLocation();
+    // Weather Texture 2D sampler
+    GLint GetWeatherTextureLocation();
 
     void UseShader();
     
@@ -46,7 +48,10 @@ private:
     GLint uniformCamForward;
     GLint uniformCamUp;
     GLint uniformCamRight;
+    // 3D Texture 128x128x128 in RGBA format  
     GLint uniformLowFreqTexture;
+    // 2D Texture 512x512 in RGB format
+    GLint uniformWeatherTexture;
     //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
     void CompileShader(const char * vertexCode, const char * fragmentCode);

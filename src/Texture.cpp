@@ -21,6 +21,11 @@ bool Texture::LoadTexture(){
     glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(texData);
+
+    printf("Texture 2D in RGB format Loaded!\n");
+    printf("width>%i\n", this->width);
+    printf("height>%i\n", this->height);
+    printf("depth>%i\n", this->bitDepht);
     
     return true;
 }
@@ -44,6 +49,11 @@ bool Texture::LoadTextureA(){
     glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(texData);
+
+    printf("Texture 2D in RGBA format Loaded!\n");
+    printf("width>%i\n", this->width);
+    printf("height>%i\n", this->height);
+    printf("depth>%i\n", this->bitDepht);
 
     return true;
 }
@@ -70,16 +80,17 @@ bool Texture::LoadTexture3D(){
     printf("depth>%i\n", this->bitDepht);
     return true;
 }
-void Texture::UseTexture3D(GLint textureLocation){
+void Texture::UseTexture3D(GLint textureLocation, GLint indexTexture){
 
-    glActiveTexture(GL_TEXTURE0);
-    glUniform1i(textureLocation, 0);
+    glActiveTexture(GL_TEXTURE0 + indexTexture);
+    glUniform1i(textureLocation, indexTexture);
     glBindTexture(GL_TEXTURE_3D, this->textureID);
 }
 
 
-void Texture::UseTexture(){
-    glActiveTexture(GL_TEXTURE0);
+void Texture::UseTexture(GLint textureLocation, GLint indexTexture){
+    glActiveTexture(GL_TEXTURE0 + indexTexture);
+    glUniform1i(textureLocation, indexTexture);
     glBindTexture(GL_TEXTURE_2D, this->textureID);
 }
 void Texture::ClearTexture(){

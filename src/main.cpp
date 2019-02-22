@@ -107,11 +107,16 @@ int main(){
     Mesh * quadstatic = CreateQuad();
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
+    Texture * weatherTexture = new Texture("textures/weathermap.png");
+    // Load 3d Texture in RGBA format
     lowfreqTexture->LoadTexture3D();
+    // Load 2D texture in RGB format
+    weatherTexture->LoadTextureA();
     //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarchingFragment.glsl");
     Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.03);
     glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
+    GLint indexTexture = 0;
     while(!window->getShouldClose()){
         GLfloat now = glfwGetTime();
         deltaTime = now - lastTime;
@@ -142,7 +147,8 @@ int main(){
         glUniform1f(shader->GetTimeLocation(), now);
         glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
-        lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation());
+        lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
+        weatherTexture->UseTexture(shader->GetWeatherTextureLocation(), indexTexture++);
         /*
          *  Static Quad model
          */ 
@@ -164,6 +170,7 @@ int main(){
     delete camera;
     delete quad;
     delete lowfreqTexture;
+    delete weatherTexture;
     return 0;
     
 }

@@ -12,6 +12,7 @@ uniform float screenHeight;
 
 // Variable for sample textures
 uniform sampler3D lowFrequencyTexture;
+uniform sampler2D WeatherTexture;
 
 struct Ray{
     vec3 origin;
@@ -25,10 +26,62 @@ const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 10000.0;
 const float ATMOSPHERE_THICKNESS = 10000.0;
 const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + ATMOSPHERE_THICKNESS;
 
+// Remap from book
+
+float Remap(float original_value, float original_min, float original_max, float new_min, float new_max){
+    return new_min + (((original_value - original_min)/(original_max - original_min)) * (new_max - new_min));
+}
+
+
+/* @brief
+ * Density height function based on wheather map
+ */
+float GetDensityHeightGradientForPoint(vec2 point){
+    // Sample the texture pn point
+    vec4 weatherdata = texture(WeatherTexture, point);
+    // Cloud coverage on Sky this is red channel
+    float cloudcoverage = weatherdata.x;
+    // precipitation probability
+    float precipitation = weatherdata.y;
+    // cloud type {0: Stratus, 1: stratocummulus, 2: cumulus}
+    int cloudtype = 0;
+    if(weatherdata.z < 0.55 && weatherdata.z > 0.45)
+        cloudtype = 1;
+    else if(weatherdata.z > 0.9)
+        cloudtype = 2;
+
+    // TODO: for moment just cloud coverage is been using.
+    return cloudcoverage;
+
+}
+
+/*
+ * @brief
+ * Get the texture weather map intesection
+ * by mapping the texture over all the dome
+ */
+vec2 GetPointToSampleInDome(vec3 positionInDome, vec3 eyePosition, vec3 domeCenter, float radiusDome){
+    float r = length(eyePosition - domeCenter);
+    float dist = sqrt(radiusDome*radiusDome - r * r);
+    vec3 posXmin = eyePosition + vec3(-1.0, 0.0, 0.0) * dist;
+    vec3 posZmin = eyePosition + vec3(0.0, 0.0, -1.0) * dist;
+    
+    posXmin.y = 0.0;
+    posZmin.y = 0.0;
+    positionInDome.y = 0.0;
+
+
+    float posx = length(positionInDome - posXmin)/(2 * dist);
+    float posy = length(positionInDome - posZmin)/(2 * dist);
+    vec2 pointSample = vec2(posx, posy);
+    return pointSample;
+}
+
 /*
  *  @brief
  *  remaping
  */
+
 float remapClamped(float value, float old_min, float old_max, float new_min, float new_max){
     float v = new_min +((value - old_min)/ (old_max - old_min))*(new_max - new_min);
     return clamp(v, new_min, new_max);
@@ -89,6 +142,21 @@ vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter){
  * @brief:
  * Sample Low Frequency Texture - Provides Brownian noise -> FBM
  */
+
+float sampleCloudDensity(vec3 p, vec2 weather_point){
+    // Read the low frequency Perlin-Worley & Worley noise
+    vec4 low_frequency_noises = texture(lowFrequencyTexture, p);
+    float low_freq_FBM = low_frequency_noises.y * 0.625 + 
+                        low_frequency_noises.z * 0.250 +
+                        low_frequency_noises.w * 0.125;
+    float base_cloud = Remap(low_frequency_noises.x, -(1.0 - low_freq_FBM), 1.0, 0.0, 1.0);
+
+    // TODO: Base on whether texture
+    
+    float density_height_gradient = GetDensityHeightGradientForPoint(weather_point);
+
+    return base_cloud * density_height_gradient; 
+}
 float sampleLowFrequencyTexture(vec3 pointSample){
     // 3D texture sampled 4 channels RGBA
     vec4 sampledTexture = texture(lowFrequencyTexture, pointSample);
@@ -124,13 +192,22 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
         // Warn: Hardcoded variable
         vec3 pointSampled = GetPositionInAtmosphere(pos, earthCenter);//vec3(0.6, 0.0, 0.6);
 
-        float baseCloud = sampleLowFrequencyTexture(pointSampled);
+        vec2 weatherPoint = GetPointToSampleInDome(innerIntersection, rayOrigin, earthCenter, ATMOSPHERE_INNER_RADIUS);
+        float baseCloud = sampleCloudDensity(pointSampled, weatherPoint);
+        //float baseCloud = sampleLowFrequencyTexture(pointSampled);
+        //float baseCloud = 0.5;
         if(baseCloud > 0.0){
-            acummDensity += baseCloud *0.5;
+            acummDensity += baseCloud *0.0003;
+            //acummDensity += baseCloud * 0.1;
             colorPixel += vec3(acummDensity );
+            //break;
         }
         if(acummDensity >= 1.0){
             acummDensity = 1.0;
+            break;
+        }
+        if(baseCloud < 0){
+            colorPixel = vec3(0.0);
             break;
         }
 
@@ -161,11 +238,13 @@ void main(){
         color =  vec4(colorNearHorizon, 1.0);
         return;
     }
-    else if(seeingUp < 0.06){
+    /*else if(seeingUp < 0.06){
         vec3 colorHorizon = vec3(0.3, 0.32, 0.51) * 0.4;
         color =  vec4(colorHorizon, 1.0);
         return;
-    }
+    }*/
+    //vec4 weatherdata = texture(WeatherTexture, vec2(x,y));
+    //vec3 col = vec3(weatherdata.xyz);
     vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
 
     color = vec4(col, 1.0);

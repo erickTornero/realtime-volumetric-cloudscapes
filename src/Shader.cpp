@@ -9,6 +9,8 @@ Shader::Shader(){
     //this->uniformProjection = 0;
     this->uniformTime = 0;
     this->uniformMouseXY = 0;
+    this->uniformLowFreqTexture = 0;
+    this->uniformWeatherTexture = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -65,6 +67,7 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformCamUp = glGetUniformLocation(shaderID, "cameraUp");
     this->uniformCamRight = glGetUniformLocation(shaderID, "cameraRight");
     this->uniformLowFreqTexture = glGetUniformLocation(shaderID, "lowFrequencyTexture");
+    this->uniformWeatherTexture = glGetUniformLocation(shaderID, "WeatherTexture");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -140,7 +143,9 @@ GLint Shader::GetCamRightLocation(){
 GLint Shader::GetLowFreqTextureLocation(){
     return this->uniformLowFreqTexture;
 }
-
+GLint Shader::GetWeatherTextureLocation(){
+    return this->uniformWeatherTexture;
+}
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -160,6 +165,7 @@ void Shader::ClearShader(){
     this->uniformCamUp = 0;
     this->uniformCamRight = 0;
     this->uniformLowFreqTexture = 0;
+    this->uniformWeatherTexture = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;
