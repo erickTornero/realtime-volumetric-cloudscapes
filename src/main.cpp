@@ -108,10 +108,18 @@ int main(){
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
     Texture * weatherTexture = new Texture("textures/weathermap.png");
+    Texture * gradientStratus = new Texture("textures/gradient_stratus.png");
+    Texture * gradientCumulus = new Texture("textures/gradient_cumulus.png");
+    Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus.png");
     // Load 3d Texture in RGBA format
     lowfreqTexture->LoadTexture3D();
     // Load 2D texture in RGB format
     weatherTexture->LoadTextureA();
+    // Load 1D Textures in Grayscale for Height gradient functions
+    gradientStratus->LoadTexture1D();
+    gradientCumulus->LoadTexture1D();
+    gradientCumulonimbus->LoadTexture1D();
+
     //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarchingFragment.glsl");
     Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.03);
@@ -149,6 +157,9 @@ int main(){
         quad->RenderMesh();
         lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
         weatherTexture->UseTexture(shader->GetWeatherTextureLocation(), indexTexture++);
+        gradientStratus->UseTexture1D(shader->GetGradientStratusTextureLocation(), indexTexture++);
+        gradientCumulus->UseTexture1D(shader->GetGradientCumulusTextureLocation(), indexTexture++);
+        gradientCumulonimbus->UseTexture1D(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
         /*
          *  Static Quad model
          */ 

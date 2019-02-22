@@ -35,6 +35,10 @@ public:
     GLint GetLowFreqTextureLocation();
     // Weather Texture 2D sampler
     GLint GetWeatherTextureLocation();
+    // Density height function 1D texture 1D;
+    GLint GetGradientStratusTextureLocation();
+    GLint GetGradientCumulusTextureLocation();
+    GLint GetGradientCumulonimbusTextureLocation();
 
     void UseShader();
     
@@ -52,6 +56,10 @@ private:
     GLint uniformLowFreqTexture;
     // 2D Texture 512x512 in RGB format
     GLint uniformWeatherTexture;
+    // 1D Texture 300 x 1 Grayscale format for height density functions
+    GLint uniformGradientStratusTexture;
+    GLint uniformGradientCumulusTexture;
+    GLint uniformGradientCumulonimbusTexture;
     //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
     void CompileShader(const char * vertexCode, const char * fragmentCode);

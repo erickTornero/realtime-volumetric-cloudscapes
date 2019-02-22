@@ -83,6 +83,28 @@ bool Texture::LoadTexture3D(){
     printf("depth>%i\n", this->bitDepht);
     return true;
 }
+bool Texture::LoadTexture1D(){
+    unsigned char * textdata1D = stbi_load(this->fileLocation, &this->width, &this->height, &this->bitDepht, 0);
+    if(!textdata1D){
+        printf("Failed loading the file 1D texture\n");
+        return false;
+    }
+    glGenTextures(1, &this->textureID);
+    glBindTexture(GL_TEXTURE_1D, this->textureID);
+    glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_LUMINANCE, this->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, textdata1D);
+    stbi_image_free(textdata1D);
+    printf("\n==================================\n");
+    printf("Texture 1D in RGB format Loaded!\n");
+    printf("width>%i\n", this->width);
+    printf("height>%i\n", this->height);
+    printf("depth>%i\n", this->bitDepht);
+    return true;
+}
 void Texture::UseTexture3D(GLint textureLocation, GLint indexTexture){
 
     glActiveTexture(GL_TEXTURE0 + indexTexture);
@@ -95,6 +117,12 @@ void Texture::UseTexture(GLint textureLocation, GLint indexTexture){
     glActiveTexture(GL_TEXTURE0 + indexTexture);
     glUniform1i(textureLocation, indexTexture);
     glBindTexture(GL_TEXTURE_2D, this->textureID);
+}
+
+void Texture::UseTexture1D(GLint textureLocation, GLint indexTexture){
+    glActiveTexture(GL_TEXTURE0 + indexTexture);
+    glUniform1i(textureLocation, indexTexture);
+    glBindTexture(GL_TEXTURE_1D, this->textureID);
 }
 void Texture::ClearTexture(){
     glDeleteTextures(1, &textureID);

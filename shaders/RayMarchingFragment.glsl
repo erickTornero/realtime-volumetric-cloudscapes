@@ -13,6 +13,9 @@ uniform float screenHeight;
 // Variable for sample textures
 uniform sampler3D lowFrequencyTexture;
 uniform sampler2D WeatherTexture;
+uniform sampler1D GradientStratusTexture;
+uniform sampler1D GradientCumulusTexture;
+uniform sampler1D GradientCumulonimbusTexture;
 
 struct Ray{
     vec3 origin;
@@ -36,7 +39,7 @@ float Remap(float original_value, float original_min, float original_max, float 
 /* @brief
  * Density height function based on wheather map
  */
-float GetDensityHeightGradientForPoint(vec2 point){
+float GetDensityHeightGradientForPoint(vec2 point, float height){
     // Sample the texture pn point
     vec4 weatherdata = texture(WeatherTexture, point);
     // Cloud coverage on Sky this is red channel
@@ -143,7 +146,7 @@ vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter, float thickness){
  * Sample Low Frequency Texture - Provides Brownian noise -> FBM
  */
 
-float sampleCloudDensity(vec3 p, vec2 weather_point){
+float sampleCloudDensity(vec3 p, vec2 weather_point, float relativeHeight){
     // Read the low frequency Perlin-Worley & Worley noise
     vec4 low_frequency_noises = texture(lowFrequencyTexture, p);
     float low_freq_FBM = low_frequency_noises.y * 0.625 + 
@@ -153,7 +156,7 @@ float sampleCloudDensity(vec3 p, vec2 weather_point){
 
     // TODO: Base on whether texture
     
-    float density_height_gradient = GetDensityHeightGradientForPoint(weather_point);
+    float density_height_gradient = GetDensityHeightGradientForPoint(weather_point, relativeHeight);
 
     return base_cloud * density_height_gradient; 
 }
@@ -193,7 +196,7 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
         vec3 pointSampled = GetPositionInAtmosphere(pos, earthCenter, atmosphereThickness);//vec3(0.6, 0.0, 0.6);
 
         vec2 weatherPoint = GetPointToSampleInDome(pos, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
-        float baseCloud = sampleCloudDensity(pointSampled, weatherPoint);
+        float baseCloud = sampleCloudDensity(pointSampled, weatherPoint, relativeHeight);
         //float baseCloud = sampleLowFrequencyTexture(pointSampled);
         //float baseCloud = 0.5;
         if(baseCloud > 0.0){
@@ -244,8 +247,21 @@ void main(){
         return;
     }*/
     //vec4 weatherdata = texture(WeatherTexture, vec2(x,y));
-    //vec3 col = vec3(weatherdata.x, 0.0, 0.0);
-    vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
+    vec4 gradient = texture(GradientCumulonimbusTexture, y);
+    vec3 col = vec3(gradient.x);
+    //float typecloud = weatherdata.z;
+    //float red = 0.0;
+    //float green = 0.0;
+    //float blue = 0.0;
+    //if(weatherdata.z < 0.55 && weatherdata.z > 0.45)
+    //    green = 1.0;
+    //else if(weatherdata.z > 0.9)
+    //    blue = 1.0;
+    //else if(weatherdata.z < 0.1)
+    //    red = 1.0;
+//
+    //vec3 col = vec3(red, green, blue);
+    //vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
     //col = vec3(1.0 - col.x, 1.0 - col.y, 1.0 - col.z);
     //float modcolor = length(col);
     //if(modcolor < 0.4)

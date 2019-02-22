@@ -11,6 +11,9 @@ Shader::Shader(){
     this->uniformMouseXY = 0;
     this->uniformLowFreqTexture = 0;
     this->uniformWeatherTexture = 0;
+    this->uniformGradientStratusTexture = 0;
+    this->uniformGradientCumulusTexture = 0;
+    this->uniformGradientCumulonimbusTexture = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -70,6 +73,9 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformCamRight = glGetUniformLocation(shaderID, "cameraRight");
     this->uniformLowFreqTexture = glGetUniformLocation(shaderID, "lowFrequencyTexture");
     this->uniformWeatherTexture = glGetUniformLocation(shaderID, "WeatherTexture");
+    this->uniformGradientStratusTexture = glGetUniformLocation(shaderID, "GradientStratusTexture");
+    this->uniformGradientCumulusTexture = glGetUniformLocation(shaderID, "GradientCumulusTexture");
+    this->uniformGradientCumulonimbusTexture = glGetUniformLocation(shaderID, "GradientCumulonimbusTexture");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -148,6 +154,15 @@ GLint Shader::GetLowFreqTextureLocation(){
 GLint Shader::GetWeatherTextureLocation(){
     return this->uniformWeatherTexture;
 }
+GLint Shader::GetGradientStratusTextureLocation(){
+    return this->uniformGradientStratusTexture;
+}
+GLint Shader::GetGradientCumulusTextureLocation(){
+    return this->uniformGradientCumulusTexture;
+}
+GLint Shader::GetGradientCumulonimbusTextureLocation(){
+    return this->uniformGradientCumulonimbusTexture;
+}
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -168,6 +183,9 @@ void Shader::ClearShader(){
     this->uniformCamRight = 0;
     this->uniformLowFreqTexture = 0;
     this->uniformWeatherTexture = 0;
+    this->uniformGradientStratusTexture = 0;
+    this->uniformGradientCumulusTexture = 0;
+    this->uniformGradientCumulonimbusTexture = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

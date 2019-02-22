@@ -14,8 +14,11 @@ public:
     bool LoadTextureA();
     // ** 3D Texture
     bool LoadTexture3D();
+    // ** 1D Texture Load in Grayscale
+    bool LoadTexture1D();
 
     void UseTexture(GLint, GLint);
+    void UseTexture1D(GLint, GLint);
     void UseTexture3D(GLint, GLint);
 
     void ClearTexture();
