@@ -20,6 +20,8 @@ void Shader::CreateFromFile(const char * fileV, const char * fileF){
     std::string vertexCode = this->ReadFileShader(fileV);
     std::string fragmentCode = this->ReadFileShader(fileF);
     this->CompileShader(vertexCode.c_str(), fragmentCode.c_str());
+    printf("\n====================================\n");
+    printf("Shader Created Successfully\n");
 }
 
 void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){

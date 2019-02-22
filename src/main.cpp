@@ -165,6 +165,8 @@ int main(){
         glUseProgram(0);
         window->swapBuffers();
     }
+    
+    printf("Releasing Resources\n");
     delete window;
     delete shader;
     delete camera;

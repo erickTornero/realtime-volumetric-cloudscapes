@@ -133,8 +133,8 @@ float GetHeightInAtmosphere(vec3 pointInAtm, vec3 earthCenter, vec3 intersection
 /*
  * ** Relative position in atmosphere
  */
-vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter){
-    vec3 posit = (pos - vec3(earthCenter.x, ATMOSPHERE_INNER_RADIUS - EARTH_RADIUS, earthCenter.x))/10000.0;
+vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter, float thickness){
+    vec3 posit = (pos - vec3(earthCenter.x, ATMOSPHERE_INNER_RADIUS - EARTH_RADIUS, earthCenter.z))/thickness;
 
     return posit;
 }
@@ -190,16 +190,16 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
         float relativeHeight = GetHeightInAtmosphere(pos, earthCenter, innerIntersection, rayDirection, rayOrigin, atmosphereThickness);
 
         // Warn: Hardcoded variable
-        vec3 pointSampled = GetPositionInAtmosphere(pos, earthCenter);//vec3(0.6, 0.0, 0.6);
+        vec3 pointSampled = GetPositionInAtmosphere(pos, earthCenter, atmosphereThickness);//vec3(0.6, 0.0, 0.6);
 
-        vec2 weatherPoint = GetPointToSampleInDome(innerIntersection, rayOrigin, earthCenter, ATMOSPHERE_INNER_RADIUS);
+        vec2 weatherPoint = GetPointToSampleInDome(pos, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
         float baseCloud = sampleCloudDensity(pointSampled, weatherPoint);
         //float baseCloud = sampleLowFrequencyTexture(pointSampled);
         //float baseCloud = 0.5;
         if(baseCloud > 0.0){
-            acummDensity += baseCloud *0.0003;
+            acummDensity += baseCloud *0.0001;
             //acummDensity += baseCloud * 0.1;
-            colorPixel += vec3(acummDensity );
+            colorPixel += vec3(baseCloud *0.006);
             //break;
         }
         if(acummDensity >= 1.0){
@@ -234,7 +234,7 @@ void main(){
 
     float seeingUp = dot(vec3(0.0, 1.0, 0.0), rayDirection);
     if(seeingUp < 0.0){
-        vec3 colorNearHorizon = vec3(0.0, 0.16, 0.51) * 0.4;
+        vec3 colorNearHorizon = vec3(0.54, 0.23, 0.046) * 0.4;
         color =  vec4(colorNearHorizon, 1.0);
         return;
     }
@@ -244,8 +244,11 @@ void main(){
         return;
     }*/
     //vec4 weatherdata = texture(WeatherTexture, vec2(x,y));
-    //vec3 col = vec3(weatherdata.xyz);
+    //vec3 col = vec3(weatherdata.x, 0.0, 0.0);
     vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
-
+    //col = vec3(1.0 - col.x, 1.0 - col.y, 1.0 - col.z);
+    //float modcolor = length(col);
+    //if(modcolor < 0.4)
+    //    col = vec3(0.5273, 0.808, 0.922);
     color = vec4(col, 1.0);
 }

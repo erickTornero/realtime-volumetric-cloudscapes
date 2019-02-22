@@ -21,7 +21,7 @@ bool Texture::LoadTexture(){
     glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(texData);
-
+    printf("\n==================================\n");
     printf("Texture 2D in RGB format Loaded!\n");
     printf("width>%i\n", this->width);
     printf("height>%i\n", this->height);
@@ -50,6 +50,7 @@ bool Texture::LoadTextureA(){
 
     stbi_image_free(texData);
 
+    printf("\n==================================\n");
     printf("Texture 2D in RGBA format Loaded!\n");
     printf("width>%i\n", this->width);
     printf("height>%i\n", this->height);
@@ -75,6 +76,8 @@ bool Texture::LoadTexture3D(){
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 128, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData3D);
     stbi_image_free(texData3D);
 
+    printf("\n==================================\n");
+    printf("Texture 3D in RGBA format Loaded!\n");
     printf("width>%i\n", this->width);
     printf("height>%i\n", this->height);
     printf("depth>%i\n", this->bitDepht);
