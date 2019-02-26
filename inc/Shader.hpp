@@ -14,9 +14,9 @@ public:
 
     void CreateFromString(const char * vertexCode, const char * fragmentCode);
     void CreateFromFile(const char * fileV, const char * fileF);
-    GLint GetProjectionLocation();
-    GLint GetModelLocation();
-    GLint GetViewLocation();
+    //GLint GetProjectionLocation();
+    //GLint GetModelLocation();
+    //GLint GetViewLocation();
     //GLint GetIntensityLocation();
     //GLint GetAmbientColourLocation();
     //GLint GetDiffuseIntensityLocation();
@@ -25,8 +25,8 @@ public:
     GLint GetScreenHeightLocation();
 
     GLint GetCameraPositionLocation();
-    GLint GetTimeLocation();
-    GLint GetMouseXYLocation();
+    //GLint GetTimeLocation();
+    //GLint GetMouseXYLocation();
     GLint GetCamForwardLocation();
     GLint GetCamUpLocation();
     GLint GetCamRightLocation();
@@ -45,10 +45,10 @@ public:
     ~Shader();
 private:
     GLuint shaderID;
-    GLint uniformProjection, uniformModel, uniformView;
+    //GLint uniformProjection, uniformModel, uniformView;
     GLint uniformCameraPosition;
-    GLint uniformTime;
-    GLint uniformMouseXY;
+    //GLint uniformTime;
+    //GLint uniformMouseXY;
     GLint uniformCamForward;
     GLint uniformCamUp;
     GLint uniformCamRight;

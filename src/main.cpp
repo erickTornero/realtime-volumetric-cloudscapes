@@ -104,26 +104,26 @@ int main(){
     std::cout<<"H> "<<bufferHeight<<std::endl;
     glViewport(0, 0, bufferWidth, bufferHeight);
     Mesh * quad = CreateQuad();
-    Mesh * quadstatic = CreateQuad();
+    //Mesh * quadstatic = CreateQuad();
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
     Texture * weatherTexture = new Texture("textures/weather_model2.tga");
-    Texture * gradientStratus = new Texture("textures/gradient_stratus.png");
-    Texture * gradientCumulus = new Texture("textures/gradient_cumulus.png");
-    Texture * gradientCumulonimbus = new Texture("textures/stratus.png");
+    Texture * gradientStratus = new Texture("textures/gradient_stratus2d.tga");
+    Texture * gradientCumulus = new Texture("textures/gradient_cumulus2d.tga");
+    Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus2d.tga");
     // Load 3d Texture in RGBA format
     lowfreqTexture->LoadTexture3D();
     // Load 2D texture in RGB format
     weatherTexture->LoadTexture();
     // Load 1D Textures in Grayscale for Height gradient functions
-    gradientStratus->LoadTexture1D();
-    gradientCumulus->LoadTexture1D();
+    gradientStratus->LoadTexture2DGray();
+    gradientCumulus->LoadTexture2DGray();
     gradientCumulonimbus->LoadTexture2DGray();
 
     //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarchingFragment.glsl");
     Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.03);
-    glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
+    //glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
     GLint indexTexture = 0;
     while(!window->getShouldClose()){
         GLfloat now = glfwGetTime();
@@ -139,21 +139,21 @@ int main(){
         /*
          *   Camera plane model
         */
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(-1.2f, -2.0, -2.5f));
-        glm::vec4 postemp = model*glm::vec4(0.0,0.0,0.0, 1.0);
+        //glm::mat4 model(1.0f);
+        //model = glm::translate(model, glm::vec3(-1.2f, -2.0, -2.5f));
+        //glm::vec4 postemp = model*glm::vec4(0.0,0.0,0.0, 1.0);
         //std::cout<<"("<<camera->getCameraPosition().x<<", "<<camera->getCameraPosition().y<<", "<<camera->getCameraPosition().z<<")"<<std::endl;
         //camera->SetPosition(glm::vec3(postemp.x, postemp.y, postemp.z) - glm::vec3(0.0, 0.0, -2.0));
-        glUniformMatrix4fv(shader->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(shader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(shader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
+        //glUniformMatrix4fv(shader->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
+        //glUniformMatrix4fv(shader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projection));
+        //glUniformMatrix4fv(shader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->calculateViewMatrix()));
         glUniform3fv(shader->GetCameraPositionLocation(), 1, glm::value_ptr(camera->getCameraPosition()));
         glUniform3fv(shader->GetCamForwardLocation(),1, glm::value_ptr(camera->getCameraFront()));
         glUniform3fv(shader->GetCamUpLocation(),1, glm::value_ptr(camera->getCameraUp()));
         glUniform3fv(shader->GetCamRightLocation(),1, glm::value_ptr(camera->getCameraRight()));
         //glUniform1f()
-        glUniform1f(shader->GetTimeLocation(), now);
-        glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
+        //glUniform1f(shader->GetTimeLocation(), now);
+        //glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
         lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
         
@@ -166,16 +166,16 @@ int main(){
         //glActiveTexture(GL_TEXTURE1);
         //glBindTexture(GL_TEXTURE_2D, weatherTexture->GetID());
         
-        gradientStratus->UseTexture1D(shader->GetGradientStratusTextureLocation(), indexTexture++);
-        //gradientCumulus->UseTexture1D(shader->GetGradientCumulusTextureLocation(), indexTexture++);
+        gradientStratus->UseTexture(shader->GetGradientStratusTextureLocation(), indexTexture++);
+        gradientCumulus->UseTexture(shader->GetGradientCumulusTextureLocation(), indexTexture++);
         gradientCumulonimbus->UseTexture(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
         //glUniform1i(shader->GetGradientCumulonimbusTextureLocation(), 2);
         //glActiveTexture(GL_TEXTURE2);
         //glBindTexture(GL_TEXTURE_2D, gradientCumulonimbus->GetID());
         
-        glUniform1i(shader->GetGradientStratusTextureLocation(), 3);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_1D, gradientStratus->GetID());
+        //glUniform1i(shader->GetGradientStratusTextureLocation(), 3);
+        //glActiveTexture(GL_TEXTURE3);
+        //glBindTexture(GL_TEXTURE_1D, gradientStratus->GetID());
         /*
          *  Static Quad model
          */ 
@@ -188,11 +188,12 @@ int main(){
         //glUniform()
         glUniform1f(shader->GetScreenWidthLocation(), GLfloat(bufferWidth));
         glUniform1f(shader->GetScreenHeightLocation(), GLfloat(bufferHeight));
+        indexTexture = 0;
         
         glUseProgram(0);
         window->swapBuffers();
         
-        indexTexture = 0;
+        
     }
     
     printf("Releasing Resources\n");
@@ -202,6 +203,10 @@ int main(){
     delete quad;
     delete lowfreqTexture;
     delete weatherTexture;
+    delete gradientStratus;
+    delete gradientCumulus;
+    delete gradientCumulonimbus;
+
     return 0;
     
 }

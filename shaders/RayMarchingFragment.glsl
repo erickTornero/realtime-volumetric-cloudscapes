@@ -14,9 +14,9 @@ uniform float screenHeight;
 uniform sampler3D lowFrequencyTexture;
 uniform sampler2D WeatherTexture;
 
-//uniform sampler1D GradientCumulusTexture;
+uniform sampler2D GradientCumulusTexture;
 uniform sampler2D GradientCumulonimbusTexture;
-uniform sampler1D GradientStratusTexture;
+uniform sampler2D GradientStratusTexture;
 
 struct Ray{
     vec3 origin;
@@ -36,7 +36,53 @@ float Remap(float original_value, float original_min, float original_max, float 
     return new_min + (((original_value - original_min)/(original_max - original_min)) * (new_max - new_min));
 }
 
+float densityHeightFactor(float height, int typecloud){
+    float pi = 3.1416;
+    float timewidthup, starttimeup, starttimedown;
+    if(typecloud == 0){
+        timewidthup = 0.08;
+        starttimeup = 0.08;
+        starttimedown = 0.2;
+    }
+    else if(typecloud == 1){
+        timewidthup = 0.14;
+        starttimeup = 0.1;
+        starttimedown = 0.5;
+    }
+    else if(typecloud == 2){
+        timewidthup = 0.2;
+        starttimeup = 0.10;
+        starttimedown = 0.7;
+    }
 
+    float factor = 2*pi/(2*timewidthup);
+    
+    float density = 0.0;
+    if(height < starttimeup)
+        density = 0.0;
+    else if(height < starttimeup + timewidthup)
+        density = 0.5*sin(factor * height - pi/2.0 - factor * starttimeup) + 0.5;
+    else if(height < starttimedown)
+        density = 1.0;
+    else if(height < starttimedown + timewidthup)
+        density =  0.5 * sin(factor * height - pi/2.0 - factor * (starttimedown + timewidthup)) + 0.5;
+    else
+        density = 0.0;
+
+    return density;
+    //for i in range(100):
+	//step = i/100.0
+	//if step < starttimeup:
+	//	y.append(0.0)
+	//elif step < starttimeup + timewidthup:
+	//	y.append(0.5 * math.sin(factor * step - math.pi/2 - 39.27*starttimeup) + 0.5)
+	//elif step < starttimedown:
+	//	y.append(1.0)
+	//elif step < starttimedown + timewidthup:
+	//	y.append(0.5 * math.sin(factor * step - math.pi/2 - factor * (starttimedown + timewidthup)) + 0.5)
+	//else:
+	//	y.append(0.0)
+}
 /* @brief
  * Density height function based on wheather map
  */
@@ -54,11 +100,17 @@ float GetDensityHeightGradientForPoint(vec2 point, float height){
     else if(weatherdata.z > 0.9)
         cloudtype = 2;
 
-    vec4 heightFactor = vec4(0.0);
-    if(cloudtype == 0)
-        heightFactor = texture(GradientCumulonimbusTexture, 1.0 - vec2(height, height));
+    float heightFactor = densityHeightFactor(height, cloudtype);
+    //vec4 heightFactor = vec4(1.0);
+    //if(cloudtype == 0)
+    //    heightFactor = texture(GradientStratusTexture, 1.0 - vec2(height, height));
+    //else if(cloudtype == 1)
+	//    heightFactor = texture(GradientCumulusTexture, 1.0 - vec2(height, height));
+    //else
+	//   heightFactor = texture(GradientCumulonimbusTexture, 1.0 - vec2(height, height));
+    
     // TODO: for moment just cloud coverage is been using.
-    return cloudcoverage * heightFactor.x;
+    return cloudcoverage * heightFactor;
 
 }
 
@@ -88,7 +140,7 @@ vec2 GetPointToSampleInDome(vec3 positionInDome, vec3 eyePosition, vec3 domeCent
  *  @brief
  *  remaping
  */
-
+/*
 float remapClamped(float value, float old_min, float old_max, float new_min, float new_max){
     float v = new_min +((value - old_min)/ (old_max - old_min))*(new_max - new_min);
     return clamp(v, new_min, new_max);
@@ -96,10 +148,10 @@ float remapClamped(float value, float old_min, float old_max, float new_min, flo
 float remapClampPrevPost(float value, float old_min, float old_max, float new_min, float new_max){
     value = clamp(value, old_min, old_max);
     return remapClamped(value, old_min, old_max, new_min, new_max);
-}
+}*/
 
 vec3 GetRayDirection(vec3 front, vec3 right, vec3 up, float x, float y){
-    vec3 ray = 10 * front + right * x + up * y;
+    vec3 ray = 5 * front + right * x + up * y;
     return normalize(ray);
 }
 // Get the intersection with a ray launch from 'rayOrigin', whit a sphere with 'radius'
@@ -135,7 +187,7 @@ float GetHeightInAtmosphere(vec3 pointInAtm, vec3 earthCenter, vec3 intersection
     
     float posInAtm = abs(cosThet * (distanceCamera2Point - distanceCamera2InnerAtm));
 
-    return posInAtm/atmThick;
+    return clamp(posInAtm/atmThick, 0.0, 1.0);
 }
 /*
  * ** Relative position in atmosphere
@@ -164,7 +216,7 @@ float sampleCloudDensity(vec3 p, vec2 weather_point, float relativeHeight){
 
     return base_cloud * density_height_gradient; 
 }
-float sampleLowFrequencyTexture(vec3 pointSample){
+/*float sampleLowFrequencyTexture(vec3 pointSample){
     // 3D texture sampled 4 channels RGBA
     vec4 sampledTexture = texture(lowFrequencyTexture, pointSample);
     float valueFBM = sampledTexture.y * 0.625 + sampledTexture.z * 0.25 + sampledTexture.w * 0.125;
@@ -177,7 +229,7 @@ float sampleLowFrequencyTexture(vec3 pointSample){
     baseCloudCoverage *= coverage;
 
     return baseCloudCoverage;
-}
+}*/
 
 vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3 earthCenter, float start_atm, float end_atm){
     float atmosphereThickness = end_atm - start_atm;
@@ -250,11 +302,11 @@ void main(){
         color =  vec4(colorHorizon, 1.0);
         return;
     }*/
-    vec4 weatherdata = texture(WeatherTexture, vec2(x,y)/2.0 + 0.5);
+    //vec4 weatherdata = texture(WeatherTexture, vec2(x,y)/2.0 + 0.5);
     //vec4 gradient = texture(GradientCumulonimbusTexture, -vec2(y,y)/2.0 + 0.5);
     //vec4 gradient = texture(GradientStratusTexture, y/2.0 + 0.5);
     
-    //vec3 col = vec3(gradient.x, gradient.x, gradient.x);
+    //vec3 col = vec3(0, 0, weatherdata.x);
     
     
     //float typecloud = weatherdata.z;
@@ -266,9 +318,9 @@ void main(){
     //else if(weatherdata.z > 0.9)
     //    blue = 1.0;
     //else if(weatherdata.z < 0.1)
-    //    red = 1.0;
-//
-    //vec3 col = vec3(weatherdata.x, weatherdata.y, weatherdata.z);
+    //   red = 1.0;
+    //
+    //vec3 col = vec3(red, green, blue);
     
     
     vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);

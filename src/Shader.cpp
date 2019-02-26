@@ -7,8 +7,8 @@ Shader::Shader(){
     this->uniformCameraPosition = 0;
     //this->uniformModel = 0;
     //this->uniformProjection = 0;
-    this->uniformTime = 0;
-    this->uniformMouseXY = 0;
+    //this->uniformTime = 0;
+    //this->uniformMouseXY = 0;
     this->uniformLowFreqTexture = 0;
     this->uniformWeatherTexture = 0;
     this->uniformGradientStratusTexture = 0;
@@ -58,16 +58,16 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformScreenHeight = glGetUniformLocation(shaderID, "screenHeight");
     //uniformXMove = glGetUniformLocation(shader, "xMove");
     //uniformYMove = glGetUniformLocation(shader, "yMove");
-    this->uniformModel = glGetUniformLocation(shaderID, "model");
-    this->uniformProjection = glGetUniformLocation(shaderID, "projection");
-    this->uniformView = glGetUniformLocation(shaderID, "view");
+    //this->uniformModel = glGetUniformLocation(shaderID, "model");
+    //this->uniformProjection = glGetUniformLocation(shaderID, "projection");
+    //this->uniformView = glGetUniformLocation(shaderID, "view");
     //this->uniformAmbientColour = glGetUniformLocation(shaderID, "directionalLight.colour");
     //this->uniformAmbientIntensity = glGetUniformLocation(shaderID, "directionalLight.ambientIntensity");
     //this->uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
     //this->uniformDiffuseIntensity = glGetUniformLocation(shaderID, "directionalLight.diffuseIntensity");
     this->uniformCameraPosition = glGetUniformLocation(shaderID, "cameraPosition");
-    this->uniformTime = glGetUniformLocation(shaderID, "Time");
-    this->uniformMouseXY = glGetUniformLocation(shaderID, "MouseXY");
+    //this->uniformTime = glGetUniformLocation(shaderID, "Time");
+    //this->uniformMouseXY = glGetUniformLocation(shaderID, "MouseXY");
     this->uniformCamForward = glGetUniformLocation(shaderID, "cameraFront");
     this->uniformCamUp = glGetUniformLocation(shaderID, "cameraUp");
     this->uniformCamRight = glGetUniformLocation(shaderID, "cameraRight");
@@ -102,27 +102,27 @@ void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shader
     glAttachShader(theProgram, theShader);
 }
 
-GLint Shader::GetModelLocation(){
-    return this->uniformModel;
-}
-GLint Shader::GetProjectionLocation(){
-    return this->uniformProjection;
-}
-GLint Shader::GetViewLocation(){
-    return this->uniformView;
-}/*
-GLint Shader::GetAmbientColourLocation(){
-    return this->uniformAmbientColour;
-}
-GLint Shader::GetIntensityLocation(){
-    return this->uniformAmbientIntensity;
-}
-GLint Shader::GetDiffuseIntensityLocation(){
-    return this->uniformDiffuseIntensity;
-}
-GLint Shader::GetDirectionLocation(){
-    return this->uniformDirection;
-}*/
+//GLint Shader::GetModelLocation(){
+//    return this->uniformModel;
+//}
+//GLint Shader::GetProjectionLocation(){
+//    return this->uniformProjection;
+//}
+//GLint Shader::GetViewLocation(){
+//    return this->uniformView;
+//}/*
+//GLint Shader::GetAmbientColourLocation(){
+//    return this->uniformAmbientColour;
+//}
+//GLint Shader::GetIntensityLocation(){
+//    return this->uniformAmbientIntensity;
+//}
+//GLint Shader::GetDiffuseIntensityLocation(){
+//    return this->uniformDiffuseIntensity;
+//}
+//GLint Shader::GetDirectionLocation(){
+//    return this->uniformDirection;
+//}*/
 GLint Shader::GetScreenWidthLocation(){
     return this->uniformScreenWidth;
 }
@@ -133,12 +133,12 @@ GLint Shader::GetScreenHeightLocation(){
 GLint Shader::GetCameraPositionLocation(){
     return this->uniformCameraPosition;
 }
-GLint Shader::GetTimeLocation(){
-    return this->uniformTime;
-}
-GLint Shader::GetMouseXYLocation(){
-    return this->uniformMouseXY;
-}
+//GLint Shader::GetTimeLocation(){
+//    return this->uniformTime;
+//}
+//GLint Shader::GetMouseXYLocation(){
+//    return this->uniformMouseXY;
+//}
 GLint Shader::GetCamForwardLocation(){
     return this->uniformCamForward;
 }
@@ -173,11 +173,12 @@ void Shader::ClearShader(){
     }
     this->uniformScreenWidth = 0;
     this->uniformScreenHeight = 0;
-    this->uniformModel = 0;
-    this->uniformProjection = 0; 
+    //this->uniformModel = 0;
+    //this->uniformProjection = 0; 
     this->uniformCameraPosition = 0;
-    this->uniformTime = 0;
-    this->uniformMouseXY = 0;
+    //this->uniformTime = 0;
+    //this->uniformMouseXY = 0;
+
     this->uniformCamForward = 0;
     this->uniformCamUp = 0;
     this->uniformCamRight = 0;
