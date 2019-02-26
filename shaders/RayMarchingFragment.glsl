@@ -37,7 +37,7 @@ float Remap(float original_value, float original_min, float original_max, float 
 }
 
 float densityHeightFactor(float height, int typecloud){
-    float pi = 3.1416;
+    float pi = 3.14159265;
     float timewidthup, starttimeup, starttimedown;
     if(typecloud == 0){
         timewidthup = 0.08;
@@ -86,9 +86,13 @@ float densityHeightFactor(float height, int typecloud){
 /* @brief
  * Density height function based on wheather map
  */
-float GetDensityHeightGradientForPoint(vec2 point, float height){
-    // Sample the texture pn point
+vec3 SampleWeatherTexture(vec2 point){
     vec4 weatherdata = texture(WeatherTexture, point);
+    return weatherdata.xyz;
+}
+float GetDensityHeightGradientForPoint(vec3 weatherdata, float height){
+    // Sample the texture pn point
+    //vec4 weatherdata = texture(WeatherTexture, point);
     // Cloud coverage on Sky this is red channel
     float cloudcoverage = weatherdata.x;
     // precipitation probability
@@ -110,7 +114,7 @@ float GetDensityHeightGradientForPoint(vec2 point, float height){
 	//   heightFactor = texture(GradientCumulonimbusTexture, 1.0 - vec2(height, height));
     
     // TODO: for moment just cloud coverage is been using.
-    return cloudcoverage * heightFactor;
+    return heightFactor;
 
 }
 
@@ -211,10 +215,16 @@ float sampleCloudDensity(vec3 p, vec2 weather_point, float relativeHeight){
     float base_cloud = Remap(low_frequency_noises.x, -(1.0 - low_freq_FBM), 1.0, 0.0, 1.0);
 
     // TODO: Base on whether texture
-    
-    float density_height_gradient = GetDensityHeightGradientForPoint(weather_point, relativeHeight);
+    vec3 weatherdata = SampleWeatherTexture(weather_point);
+    float density_height_gradient = GetDensityHeightGradientForPoint(weatherdata, relativeHeight);
 
-    return base_cloud * density_height_gradient; 
+    base_cloud = base_cloud * density_height_gradient;
+    float cloud_coverage = weatherdata.x;
+    float base_cloud_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
+    base_cloud_coverage = clamp(base_cloud, 0.0, 1.0);
+    base_cloud_coverage = base_cloud_coverage * cloud_coverage;
+
+    return base_cloud_coverage;
 }
 /*float sampleLowFrequencyTexture(vec3 pointSample){
     // 3D texture sampled 4 channels RGBA
@@ -253,12 +263,13 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
 
         vec2 weatherPoint = GetPointToSampleInDome(pos, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
         float baseCloud = sampleCloudDensity(pointSampled, weatherPoint, relativeHeight);
+        
         //float baseCloud = sampleLowFrequencyTexture(pointSampled);
         //float baseCloud = 0.5;
         if(baseCloud > 0.0){
             acummDensity += baseCloud *0.0001;
             //acummDensity += baseCloud * 0.1;
-            colorPixel += vec3(baseCloud *0.006);
+            colorPixel += vec3(baseCloud * 0.006);
             //break;
         }
         if(acummDensity >= 1.0){
