@@ -18,7 +18,7 @@ bool Texture::LoadTexture(){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    //glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(texData);
     printf("\n==================================\n");
@@ -74,6 +74,7 @@ bool Texture::LoadTexture3D(){
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 128, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData3D);
+    glBindTexture(GL_TEXTURE_3D, 0);
     stbi_image_free(texData3D);
 
     printf("\n==================================\n");
@@ -96,13 +97,41 @@ bool Texture::LoadTexture1D(){
     glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTextureParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_LUMINANCE, this->height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, textdata1D);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RED, this->height, 0, GL_RED, GL_UNSIGNED_BYTE, textdata1D);
+    glBindTexture(GL_TEXTURE_1D, 0);
     stbi_image_free(textdata1D);
     printf("\n==================================\n");
     printf("Texture 1D in RGB format Loaded!\n");
     printf("width>%i\n", this->width);
     printf("height>%i\n", this->height);
     printf("depth>%i\n", this->bitDepht);
+    return true;
+}
+bool Texture::LoadTexture2DGray(){
+    unsigned char * texData = stbi_load(this->fileLocation, &this->width, &this->height, &this->bitDepht, 0);
+    if(!texData){
+        printf("Failed Loading the file texture\n");
+        return false;
+    }
+    glGenTextures(1, &this->textureID);
+    glBindTexture(GL_TEXTURE_2D ,this->textureID);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, this->width, this->height, 0, GL_RED, GL_UNSIGNED_BYTE, texData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    stbi_image_free(texData);
+    printf("\n==================================\n");
+    printf("Texture 2D in Grayscale format Loaded!\n");
+    printf("width>%i\n", this->width);
+    printf("height>%i\n", this->height);
+    printf("depth>%i\n", this->bitDepht);
+    
     return true;
 }
 void Texture::UseTexture3D(GLint textureLocation, GLint indexTexture){

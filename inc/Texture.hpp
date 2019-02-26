@@ -16,12 +16,15 @@ public:
     bool LoadTexture3D();
     // ** 1D Texture Load in Grayscale
     bool LoadTexture1D();
+    // ** Load Texture GrayScale
+    bool LoadTexture2DGray();
 
     void UseTexture(GLint, GLint);
     void UseTexture1D(GLint, GLint);
     void UseTexture3D(GLint, GLint);
 
     void ClearTexture();
+    GLuint GetID(){return textureID;}
     ~Texture();
 
 private:

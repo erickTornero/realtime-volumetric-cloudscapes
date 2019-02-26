@@ -13,9 +13,10 @@ uniform float screenHeight;
 // Variable for sample textures
 uniform sampler3D lowFrequencyTexture;
 uniform sampler2D WeatherTexture;
+
+//uniform sampler1D GradientCumulusTexture;
+uniform sampler2D GradientCumulonimbusTexture;
 uniform sampler1D GradientStratusTexture;
-uniform sampler1D GradientCumulusTexture;
-uniform sampler1D GradientCumulonimbusTexture;
 
 struct Ray{
     vec3 origin;
@@ -53,8 +54,11 @@ float GetDensityHeightGradientForPoint(vec2 point, float height){
     else if(weatherdata.z > 0.9)
         cloudtype = 2;
 
+    vec4 heightFactor = vec4(0.0);
+    if(cloudtype == 0)
+        heightFactor = texture(GradientCumulonimbusTexture, 1.0 - vec2(height, height));
     // TODO: for moment just cloud coverage is been using.
-    return cloudcoverage;
+    return cloudcoverage * heightFactor.x;
 
 }
 
@@ -246,9 +250,13 @@ void main(){
         color =  vec4(colorHorizon, 1.0);
         return;
     }*/
-    //vec4 weatherdata = texture(WeatherTexture, vec2(x,y));
-    vec4 gradient = texture(GradientCumulonimbusTexture, y);
-    vec3 col = vec3(gradient.x);
+    vec4 weatherdata = texture(WeatherTexture, vec2(x,y)/2.0 + 0.5);
+    //vec4 gradient = texture(GradientCumulonimbusTexture, -vec2(y,y)/2.0 + 0.5);
+    //vec4 gradient = texture(GradientStratusTexture, y/2.0 + 0.5);
+    
+    //vec3 col = vec3(gradient.x, gradient.x, gradient.x);
+    
+    
     //float typecloud = weatherdata.z;
     //float red = 0.0;
     //float green = 0.0;
@@ -260,8 +268,10 @@ void main(){
     //else if(weatherdata.z < 0.1)
     //    red = 1.0;
 //
-    //vec3 col = vec3(red, green, blue);
-    //vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
+    //vec3 col = vec3(weatherdata.x, weatherdata.y, weatherdata.z);
+    
+    
+    vec3 col = RayMarching(rayOrigin, rayDirection, innerIntersection, earthCenter, initialLength, finalLength);
     //col = vec3(1.0 - col.x, 1.0 - col.y, 1.0 - col.z);
     //float modcolor = length(col);
     //if(modcolor < 0.4)

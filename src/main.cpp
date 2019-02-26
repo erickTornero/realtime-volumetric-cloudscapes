@@ -107,18 +107,18 @@ int main(){
     Mesh * quadstatic = CreateQuad();
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
-    Texture * weatherTexture = new Texture("textures/weathermap.png");
+    Texture * weatherTexture = new Texture("textures/weather_model2.tga");
     Texture * gradientStratus = new Texture("textures/gradient_stratus.png");
     Texture * gradientCumulus = new Texture("textures/gradient_cumulus.png");
-    Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus.png");
+    Texture * gradientCumulonimbus = new Texture("textures/stratus.png");
     // Load 3d Texture in RGBA format
     lowfreqTexture->LoadTexture3D();
     // Load 2D texture in RGB format
-    weatherTexture->LoadTextureA();
+    weatherTexture->LoadTexture();
     // Load 1D Textures in Grayscale for Height gradient functions
     gradientStratus->LoadTexture1D();
     gradientCumulus->LoadTexture1D();
-    gradientCumulonimbus->LoadTexture1D();
+    gradientCumulonimbus->LoadTexture2DGray();
 
     //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarchingFragment.glsl");
@@ -156,10 +156,26 @@ int main(){
         glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
         lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
+        
+        //glUniform1i(shader->GetLowFreqTextureLocation(), 0);
+        //glActiveTexture(GL_TEXTURE0);
+        //glBindTexture(GL_TEXTURE_3D, lowfreqTexture->GetID());
+        
         weatherTexture->UseTexture(shader->GetWeatherTextureLocation(), indexTexture++);
+        //glUniform1i(shader->GetWeatherTextureLocation(), 1);
+        //glActiveTexture(GL_TEXTURE1);
+        //glBindTexture(GL_TEXTURE_2D, weatherTexture->GetID());
+        
         gradientStratus->UseTexture1D(shader->GetGradientStratusTextureLocation(), indexTexture++);
-        gradientCumulus->UseTexture1D(shader->GetGradientCumulusTextureLocation(), indexTexture++);
-        gradientCumulonimbus->UseTexture1D(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
+        //gradientCumulus->UseTexture1D(shader->GetGradientCumulusTextureLocation(), indexTexture++);
+        gradientCumulonimbus->UseTexture(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
+        //glUniform1i(shader->GetGradientCumulonimbusTextureLocation(), 2);
+        //glActiveTexture(GL_TEXTURE2);
+        //glBindTexture(GL_TEXTURE_2D, gradientCumulonimbus->GetID());
+        
+        glUniform1i(shader->GetGradientStratusTextureLocation(), 3);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_1D, gradientStratus->GetID());
         /*
          *  Static Quad model
          */ 
@@ -175,6 +191,8 @@ int main(){
         
         glUseProgram(0);
         window->swapBuffers();
+        
+        indexTexture = 0;
     }
     
     printf("Releasing Resources\n");
