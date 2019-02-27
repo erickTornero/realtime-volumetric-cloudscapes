@@ -7,13 +7,15 @@ Shader::Shader(){
     this->uniformCameraPosition = 0;
     //this->uniformModel = 0;
     //this->uniformProjection = 0;
-    //this->uniformTime = 0;
+    this->uniformTime = 0;
     //this->uniformMouseXY = 0;
     this->uniformLowFreqTexture = 0;
+    this->uniformHighFreqTexture = 0;
     this->uniformWeatherTexture = 0;
     this->uniformGradientStratusTexture = 0;
     this->uniformGradientCumulusTexture = 0;
     this->uniformGradientCumulonimbusTexture = 0;
+    this->uniformCurlNoiseTexture = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -66,16 +68,18 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     //this->uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
     //this->uniformDiffuseIntensity = glGetUniformLocation(shaderID, "directionalLight.diffuseIntensity");
     this->uniformCameraPosition = glGetUniformLocation(shaderID, "cameraPosition");
-    //this->uniformTime = glGetUniformLocation(shaderID, "Time");
+    this->uniformTime = glGetUniformLocation(shaderID, "Time");
     //this->uniformMouseXY = glGetUniformLocation(shaderID, "MouseXY");
     this->uniformCamForward = glGetUniformLocation(shaderID, "cameraFront");
     this->uniformCamUp = glGetUniformLocation(shaderID, "cameraUp");
     this->uniformCamRight = glGetUniformLocation(shaderID, "cameraRight");
     this->uniformLowFreqTexture = glGetUniformLocation(shaderID, "lowFrequencyTexture");
+    this->uniformHighFreqTexture = glGetUniformLocation(shaderID, "highFrequencyTexture");
     this->uniformWeatherTexture = glGetUniformLocation(shaderID, "WeatherTexture");
     this->uniformGradientStratusTexture = glGetUniformLocation(shaderID, "GradientStratusTexture");
     this->uniformGradientCumulusTexture = glGetUniformLocation(shaderID, "GradientCumulusTexture");
     this->uniformGradientCumulonimbusTexture = glGetUniformLocation(shaderID, "GradientCumulonimbusTexture");
+    this->uniformCurlNoiseTexture = glGetUniformLocation(shaderID, "CurlNoiseTexture");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -133,9 +137,9 @@ GLint Shader::GetScreenHeightLocation(){
 GLint Shader::GetCameraPositionLocation(){
     return this->uniformCameraPosition;
 }
-//GLint Shader::GetTimeLocation(){
-//    return this->uniformTime;
-//}
+GLint Shader::GetTimeLocation(){
+    return this->uniformTime;
+}
 //GLint Shader::GetMouseXYLocation(){
 //    return this->uniformMouseXY;
 //}
@@ -163,6 +167,12 @@ GLint Shader::GetGradientCumulusTextureLocation(){
 GLint Shader::GetGradientCumulonimbusTextureLocation(){
     return this->uniformGradientCumulonimbusTexture;
 }
+GLint Shader::GetHighFreqTextureLocation(){
+    return this->uniformHighFreqTexture;
+}
+GLint Shader::GetCurlNoiseTextureLocation(){
+    return this->uniformCurlNoiseTexture;
+}
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -176,7 +186,7 @@ void Shader::ClearShader(){
     //this->uniformModel = 0;
     //this->uniformProjection = 0; 
     this->uniformCameraPosition = 0;
-    //this->uniformTime = 0;
+    this->uniformTime = 0;
     //this->uniformMouseXY = 0;
 
     this->uniformCamForward = 0;
@@ -187,6 +197,8 @@ void Shader::ClearShader(){
     this->uniformGradientStratusTexture = 0;
     this->uniformGradientCumulusTexture = 0;
     this->uniformGradientCumulonimbusTexture = 0;
+    this->uniformHighFreqTexture = 0;
+    this->uniformCurlNoiseTexture = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

@@ -73,7 +73,7 @@ bool Texture::LoadTexture3D(){
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 128, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData3D);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, this->width, this->width, this->width, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData3D);
     glBindTexture(GL_TEXTURE_3D, 0);
     stbi_image_free(texData3D);
 

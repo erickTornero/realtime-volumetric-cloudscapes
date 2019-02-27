@@ -107,18 +107,23 @@ int main(){
     //Mesh * quadstatic = CreateQuad();
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
+    Texture * highFreqTexture = new Texture("textures/HighFrequency3DTexture.tga");
     Texture * weatherTexture = new Texture("textures/weather_model2.tga");
     Texture * gradientStratus = new Texture("textures/gradient_stratus2d.tga");
     Texture * gradientCumulus = new Texture("textures/gradient_cumulus2d.tga");
     Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus2d.tga");
+    Texture * curlNoiseTexture = new Texture("textures/curlNoise.png");
     // Load 3d Texture in RGBA format
     lowfreqTexture->LoadTexture3D();
+    // Load 3d texture
+    highFreqTexture->LoadTexture3D();
     // Load 2D texture in RGB format
     weatherTexture->LoadTexture();
     // Load 1D Textures in Grayscale for Height gradient functions
     gradientStratus->LoadTexture2DGray();
     gradientCumulus->LoadTexture2DGray();
     gradientCumulonimbus->LoadTexture2DGray();
+    curlNoiseTexture->LoadTextureA();
 
     //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarchingFragment.glsl");
@@ -152,11 +157,11 @@ int main(){
         glUniform3fv(shader->GetCamUpLocation(),1, glm::value_ptr(camera->getCameraUp()));
         glUniform3fv(shader->GetCamRightLocation(),1, glm::value_ptr(camera->getCameraRight()));
         //glUniform1f()
-        //glUniform1f(shader->GetTimeLocation(), now);
+        glUniform1f(shader->GetTimeLocation(), now);
         //glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
         lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
-        
+        highFreqTexture->UseTexture3D(shader->GetHighFreqTextureLocation(), indexTexture++);
         //glUniform1i(shader->GetLowFreqTextureLocation(), 0);
         //glActiveTexture(GL_TEXTURE0);
         //glBindTexture(GL_TEXTURE_3D, lowfreqTexture->GetID());
@@ -169,6 +174,7 @@ int main(){
         gradientStratus->UseTexture(shader->GetGradientStratusTextureLocation(), indexTexture++);
         gradientCumulus->UseTexture(shader->GetGradientCumulusTextureLocation(), indexTexture++);
         gradientCumulonimbus->UseTexture(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
+        curlNoiseTexture->UseTexture(shader->GetCurlNoiseTextureLocation(), indexTexture++);
         //glUniform1i(shader->GetGradientCumulonimbusTextureLocation(), 2);
         //glActiveTexture(GL_TEXTURE2);
         //glBindTexture(GL_TEXTURE_2D, gradientCumulonimbus->GetID());

@@ -9,14 +9,16 @@ uniform vec3 cameraRight;
 
 uniform float screenWidth;
 uniform float screenHeight;
-
+uniform float Time;
 // Variable for sample textures
 uniform sampler3D lowFrequencyTexture;
+uniform sampler3D highFrequencyTexture;
 uniform sampler2D WeatherTexture;
 
 uniform sampler2D GradientCumulusTexture;
 uniform sampler2D GradientCumulonimbusTexture;
 uniform sampler2D GradientStratusTexture;
+uniform sampler2D CurlNoiseTexture;
 
 struct Ray{
     vec3 origin;
@@ -89,6 +91,15 @@ float densityHeightFactor(float height, int typecloud){
 vec3 SampleWeatherTexture(vec2 point){
     vec4 weatherdata = texture(WeatherTexture, point);
     return weatherdata.xyz;
+}
+vec3 SampleCurlNoiseTexture(vec2 point){
+    vec4 curlnoisedata = texture(CurlNoiseTexture, point);
+    return curlnoisedata.xyz;
+}
+
+vec3 SampleHighFrequencyTexture(vec3 point){
+    vec4 highFreqTexture = texture(highFrequencyTexture, point);
+    return highFreqTexture.xyz;
 }
 float GetDensityHeightGradientForPoint(vec3 weatherdata, float height){
     // Sample the texture pn point
@@ -207,6 +218,13 @@ vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter, float thickness){
  */
 
 float sampleCloudDensity(vec3 p, vec2 weather_point, float relativeHeight){
+    // Simulate movement of clouds
+    vec3 wind_direction = vec3(1.0, 0.0, 0.0);
+    float cloud_speed = 10.0;
+    float cloud_top_offset = 1.0;
+    p += relativeHeight * wind_direction * cloud_top_offset * 0.0001;
+    p += (wind_direction + vec3(0.0, 1.0, 0.0)) * Time * cloud_speed * 0.01;
+    //weather_point += wind_direction.xy*0.0001 * Time;
     // Read the low frequency Perlin-Worley & Worley noise
     vec4 low_frequency_noises = texture(lowFrequencyTexture, p);
     float low_freq_FBM = low_frequency_noises.y * 0.625 + 
@@ -224,7 +242,20 @@ float sampleCloudDensity(vec3 p, vec2 weather_point, float relativeHeight){
     base_cloud_coverage = clamp(base_cloud, 0.0, 1.0);
     base_cloud_coverage = base_cloud_coverage * cloud_coverage;
 
-    return base_cloud_coverage;
+    float final_cloud = base_cloud_coverage;
+    if(base_cloud_coverage > 0.0){
+        // high frequency working
+        vec3 curl_noise = SampleCurlNoiseTexture(p.xy);
+        p.xy += curl_noise.xy * (1.0 - relativeHeight) * 0.5;
+        vec3 high_frequency_noises = SampleHighFrequencyTexture(p);
+        float high_freq_FBM = high_frequency_noises.x * 0.625 + high_frequency_noises.y * 0.25 + high_frequency_noises.z * 0.125;
+        float high_freq_noise_modifier = mix(high_freq_FBM, 1.0 - high_freq_FBM, clamp(2.0 * relativeHeight, 0.0, 1.0));
+
+        final_cloud = Remap(base_cloud_coverage, 0.2 * high_freq_noise_modifier, 1.0, 0.0, 1.0);
+
+    }
+
+    return clamp(final_cloud, 0.0, 1.0);
 }
 /*float sampleLowFrequencyTexture(vec3 pointSample){
     // 3D texture sampled 4 channels RGBA
@@ -267,7 +298,7 @@ vec3 RayMarching(vec3 rayOrigin, vec3 rayDirection, vec3 innerIntersection, vec3
         //float baseCloud = sampleLowFrequencyTexture(pointSampled);
         //float baseCloud = 0.5;
         if(baseCloud > 0.0){
-            acummDensity += baseCloud *0.0001;
+            acummDensity += baseCloud *0.006;
             //acummDensity += baseCloud * 0.1;
             colorPixel += vec3(baseCloud * 0.006);
             //break;
@@ -318,8 +349,10 @@ void main(){
     //vec4 gradient = texture(GradientStratusTexture, y/2.0 + 0.5);
     
     //vec3 col = vec3(0, 0, weatherdata.x);
+    //vec3 col = SampleHighFrequencyTexture(vec3(x, y, 0.1)).xyz;
     
-    
+    //vec3 col = SampleCurlNoiseTexture(vec2(x, y)/2.0 + 0.5);
+
     //float typecloud = weatherdata.z;
     //float red = 0.0;
     //float green = 0.0;

@@ -25,7 +25,7 @@ public:
     GLint GetScreenHeightLocation();
 
     GLint GetCameraPositionLocation();
-    //GLint GetTimeLocation();
+    GLint GetTimeLocation();
     //GLint GetMouseXYLocation();
     GLint GetCamForwardLocation();
     GLint GetCamUpLocation();
@@ -33,6 +33,7 @@ public:
 
     // 3D texture sampler
     GLint GetLowFreqTextureLocation();
+    GLint GetHighFreqTextureLocation();
     // Weather Texture 2D sampler
     GLint GetWeatherTextureLocation();
     // Density height function 1D texture 1D;
@@ -40,6 +41,7 @@ public:
     GLint GetGradientCumulusTextureLocation();
     GLint GetGradientCumulonimbusTextureLocation();
 
+    GLint GetCurlNoiseTextureLocation();
     void UseShader();
     
     ~Shader();
@@ -47,19 +49,22 @@ private:
     GLuint shaderID;
     //GLint uniformProjection, uniformModel, uniformView;
     GLint uniformCameraPosition;
-    //GLint uniformTime;
+    GLint uniformTime;
     //GLint uniformMouseXY;
     GLint uniformCamForward;
     GLint uniformCamUp;
     GLint uniformCamRight;
     // 3D Texture 128x128x128 in RGBA format  
     GLint uniformLowFreqTexture;
+    // 3D texture 32x32x32 in RGB format for high requency texture
+    GLint uniformHighFreqTexture;
     // 2D Texture 512x512 in RGB format
     GLint uniformWeatherTexture;
     // 1D Texture 300 x 1 Grayscale format for height density functions
     GLint uniformGradientStratusTexture;
     GLint uniformGradientCumulusTexture;
     GLint uniformGradientCumulonimbusTexture;
+    GLint uniformCurlNoiseTexture;
     //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
     void CompileShader(const char * vertexCode, const char * fragmentCode);
