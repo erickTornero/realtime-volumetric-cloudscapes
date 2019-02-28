@@ -42,6 +42,12 @@ vec3 SampleWeatherTexture(vec2 point){
 vec3 SampleCurlNoiseTexture(vec2 point){
     return texture(CurlNoiseTexture, point).xyz;
 }
+
+// ** Get ray direction definition
+vec3 GetRayDirection(vec3 front, vec3 right, vec3 up, float x, float y){
+    vec3 ray = 5 * front + right * x + up * y;
+    return normalize(ray);
+}
 // ** Remap function defined by the author of paper
 float Remap(float original_value, float original_min, float original_max, float new_min, float new_max){
     return new_min + (((original_value - original_min)/(original_max - original_min)) * (new_max - new_min));
@@ -127,7 +133,7 @@ float GetDensityHeightGradientForPoint(vec3 point, vec3 weather_data){
     //float relativeHeight = GetRelativeHeightInAtmosphere(point, earthCenter);
 
     // Get gradient function defined for three type of clouds
-    return GetGradientHeightFactorighFactor(relativeHeight, cloudtype);
+    return GetGradientHeightFactor(relativeHeight, cloudtype);
 }
 // Define the intersection between ray & dome
 
@@ -157,6 +163,28 @@ vec3 GetIntersectionSphereRay(vec3 rayOrigin, vec3 rayDirection, vec3 sphereCent
 
     return rayOrigin + t * rayDirection;
 }
+
+
+// @brief
+// Get the point of weather texture to sample
+
+vec2 GetPointToSampleInDome(vec3 positionInDome, vec3 eyePosition, vec3 domeCenter, float radiusDome){
+    float r = length(eyePosition - domeCenter);
+    float dist = sqrt(radiusDome*radiusDome - r * r);
+    vec3 posXmin = eyePosition + vec3(-1.0, 0.0, 0.0) * dist;
+    vec3 posZmin = eyePosition + vec3(0.0, 0.0, -1.0) * dist;
+    
+    posXmin.y = 0.0;
+    posZmin.y = 0.0;
+    positionInDome.y = 0.0;
+
+
+    float posx = length(positionInDome - posXmin)/(2 * dist);
+    float posy = length(positionInDome - posZmin)/(2 * dist);
+    vec2 pointSample = vec2(posx, posy);
+    return pointSample;
+}
+
 
 // SampleCloudDensity
 float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, bool ischeap){
@@ -196,22 +224,32 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, bool ischeap){
 }
 // ** Ray marching algorithm
 
-float RayMarch(vec3 startPoint, vec3 rayDirection, vec3 rayDirection){
+vec3 RayMarch(vec3 startPoint, vec3 endPoint, vec3 rayDirection, vec3 rayOrigin, vec3 earthCenter){
+    vec3 colorpixel = vec3(0.0);
     float density = 0.0;
     float cloud_test = 0.0;
     int zero_density_sample_count = 0;
-
+    int sample_cout = 128; 
+    float thick_ = length(endPoint - startPoint);
+    float t = thick_/float(sample_cout);
     vec3 stepSampling = rayDirection/sample_cout;
+    vec3 posInAtm = startPoint;
     // Start the raymarching loop
+    vec3 samplepoint = vec3(0.0, 0.0, 0.0);
     for(int i = 0; i < sample_cout; i++){
+        // Sample the cloud data
+        vec2 weatherpoint = GetPointToSampleInDome(posInAtm, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+        vec3 weather_data = SampleWeatherTexture(weatherpoint);
         // Start with light test 
         if(cloud_test > 0.0){
             float sampled_density = SampleCloudDensity(samplepoint, weather_data, false);
-            if(sampled_density = 0.0)
+            if(sampled_density == 0.0)
                 zero_density_sample_count++;
             if(zero_density_sample_count != 6){
                 density += sampled_density;
                 samplepoint += stepSampling;
+                posInAtm += t * rayDirection;
+                colorpixel += vec3(sampled_density*0.6);
             }
             else{
                 cloud_test = 0.0;
@@ -223,15 +261,39 @@ float RayMarch(vec3 startPoint, vec3 rayDirection, vec3 rayDirection){
             cloud_test = SampleCloudDensity(samplepoint, weather_data, true);
             if(cloud_test == 0.0){
                 samplepoint += stepSampling;
+                posInAtm += t * rayDirection;
             }       
         }
 
+        if(density >= 1.0){
+            density = 1.0;
+            break;
+        }
+        // Define the position in atmosphere 
         samplepoint = KeepInBox(samplepoint);
     }
-    return density;
+    return colorpixel;
 }
 
 
 void main(){
+    float aspecRatio = screenWidth / screenHeight;
+    vec3 rayOrigin = cameraPosition;
+    float x = aspecRatio * (2.0 * gl_FragCoord.x/screenWidth - 1.0);
+    float y = 2.0 * gl_FragCoord.y / screenHeight - 1.0;
+
+    // Get ray Direction
+
+    vec3 rayDirection = GetRayDirection(cameraFront, cameraRight, cameraUp, x, y);
     
+    vec3 earthCenter = vec3(rayOrigin.x, rayOrigin.y - EARTH_RADIUS, rayOrigin.z);
+
+    vec3 innerIntersection = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_INNER_RADIUS);
+    vec3 outerIntersection = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+
+    vec3 col = RayMarch(innerIntersection, outerIntersection, rayDirection, rayOrigin, earthCenter);
+
+    //vec3 col = vec3(density, density, density);
+
+    color = vec4(col, 1.0);
 }
