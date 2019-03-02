@@ -95,44 +95,60 @@ float GetHeightInAtmosphere(vec3 pointInAtm, vec3 earthCenter, vec3 intersection
     return clamp(posInAtm/atmThick, 0.0, 1.0);
 }
 
-// Gradient heigh density
+/*
+ * @brief: GetGradientHeightFactor
+ * Defines the gradient height functions, up & down type sin.
+ * The function parameters is defined by the cloudtype
+ * cloudtype:  Type of cloud: 0-> Stratus, 1-> Cumulus, 2-> Cumulonimbus
+ * Height:     Relative height [0-1] respect to the atmosphere thickness 
+ */
 
 float GetGradientHeightFactor(float height, int cloudtype){
     float timewidthup, starttimeup, starttimedown;
+    // Stratus clouds
     if(cloudtype == 0){
-        timewidthup = 0.08;
-        starttimeup = 0.08;
-        starttimedown = 0.2;
-    }
+        timewidthup     = 0.08;
+        starttimeup     = 0.08;
+        starttimedown   = 0.2;
+    } // Cumulus clouds
     else if(cloudtype == 1){
-        timewidthup = 0.14;
-        starttimeup = 0.1;
-        starttimedown = 0.5;
-    }
+        timewidthup     = 0.14;
+        starttimeup     = 0.1;
+        starttimedown   = 0.5;
+        }
+    // Cumulunimbusclouds
     else if(cloudtype == 2){
-        timewidthup = 0.2;
-        starttimeup = 0.10;
-        starttimedown = 0.7;
+        timewidthup     = 0.2;
+        starttimeup     = 0.10;
+        starttimedown   = 0.7;
     }
 
-    float factor = 2 * MPI/(2 * timewidthup);
+    float factor = 2.0 * MPI/(2.0 * timewidthup);
 
-    float density = 0.0;
+    float density_gradient = 0.0;
     // Gradient functions dependent on the cloudtype
     if(height < starttimeup)
-        density = 0.0;
+        density_gradient = 0.0;
     else if(height < starttimeup + timewidthup)
-        density = 0.5 * sin(factor * height - MPI/2.0 - factor * starttimeup) + 0.5;
+        density_gradient = 0.5 * sin(factor * height - MPI/2.0 - factor * starttimeup) + 0.5;
     else if(height < starttimedown)
-        density = 1.0;
+        density_gradient = 1.0;
     else if(height < starttimedown + timewidthup)
-        density = 0.5 * sin(factor * height - MPI/2.0 - factor * (starttimedown + timewidthup)) + 0.5;
+        density_gradient = 0.5 * sin(factor * height - MPI/2.0 - factor * (starttimedown + timewidthup)) + 0.5;
     else
-        density = 0.0;
+        density_gradient = 0.0;
 
-    return density;
+    return density_gradient;
 }
 
+// TODO: Remove argument point if it's not necessary:
+
+/*
+ * @brief: GetDensityHeightGradientForPoint
+ * Return the gradient in accordance to the cloudtype and the Relative Height.
+ * vec3  weather_data:   data vector for the sampling point z: cloudtype
+ * float relativeHeight: Relative height respect to the atmosphere thickness
+ */
 float GetDensityHeightGradientForPoint(vec3 point, vec3 weather_data, float relativeHeight){
     float cloudt = weather_data.z;
     // Cloud type: {0: Stratus, 1: Cumulus, 2: Cumulonimbus}
@@ -143,11 +159,11 @@ float GetDensityHeightGradientForPoint(vec3 point, vec3 weather_data, float rela
         cloudtype = 2;
     
     // Relative Height from [0 - 1]
-    //float relativeHeight = point.y;
+    //float relh = point.y;
     //float relativeHeight = GetRelativeHeightInAtmosphere(point, earthCenter);
 
     // Get gradient function defined for three type of clouds
-    return GetGradientHeightFactor(relativeHeight, 2);
+    return GetGradientHeightFactor(relativeHeight, cloudtype);
 }
 // Define the intersection between ray & dome
 
@@ -230,11 +246,13 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
     // Apply the coverage of data
     float cloud_coverage = weather_data.x;
+
     float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
 
     // Get more aestheticcal cloud
     base_cloud_with_coverage *= cloud_coverage;
 
+    base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     //float final_cloud = base_cloud_with_coverage;
 
     //if(!ischeap){
@@ -242,23 +260,23 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
     //}
 
-    return base_cloud;
+    return base_cloud_with_coverage;
     //return clamp(base_cloud, 0.0, 1.0);
     //return base_cloud_with_coverage;
 }
 // ** Ray marching algorithm
 
 vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection, vec3 earthCenter){
-    vec3 colorpixel     = vec3(0.0);
-    float density       = 0.0;
-    float cloud_test    = 0.0;
-    int zero_density_sample_count = 0;
-    int sample_cout     = 128; 
-    float thick_        = length(endPoint - startPoint);
-    float stepsize      = float(thick_/sample_cout);
-    float start_        = length(startPoint - rayOrigin);
-    float end_          = length(endPoint   - rayOrigin);
-    vec3 stepSampling   = rayDirection/sample_cout;
+    vec3 colorpixel                 = vec3(0.0);
+    float density                   = 0.0;
+    float cloud_test                = 0.0;
+    int zero_density_sample_count   = 0;
+    int sample_cout                 = 128; 
+    float thick_                    = length(endPoint - startPoint);
+    float stepsize                  = float(thick_/sample_cout);
+    float start_                    = length(startPoint - rayOrigin);
+    float end_                      = length(endPoint   - rayOrigin);
+    vec3 stepSampling               = rayDirection/sample_cout;
     
     // Start the raymarching loop
     //vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
@@ -271,35 +289,36 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
         float relativeHeight = GetRelativeHeightInAtmosphere(posInAtm, earthCenter);
         //float relativeHeight = GetHeightInAtmosphere(posInAtm, earthCenter, startPoint, rayDirection, rayOrigin, thick_);
         // Start with light test 
-        //if(cloud_test > 0.0){
+        if(cloud_test > 0.0){
             samplepoint = KeepInBox(samplepoint);
             float sampled_density = SampleCloudDensity(samplepoint, weather_data, relativeHeight, false);
-        //    if(sampled_density == 0.0)
-        //        zero_density_sample_count++;
-        //    if(zero_density_sample_count != 6){
-                density += sampled_density;
+            if(sampled_density == 0.0)
+                zero_density_sample_count++;
+            if(zero_density_sample_count != 6){
+                density += sampled_density * 0.0003;
                 //samplepoint += stepSampling;
                 //t += stepsize;
                 //posInAtm = rayOrigin +  t * rayDirection;
-                colorpixel += vec3(sampled_density*0.3);
+                colorpixel += vec3(density);
                 if(sampled_density < 0){
                     colorpixel = vec3(0.0);
                     break;
                 }
-        //    }
-        //    else{
-        //        cloud_test = 0.0;
-        //        zero_density_sample_count = 0;
-        //    }
-        //}
-        // Light sampling
-        //else{
-        //    cloud_test = SampleCloudDensity(samplepoint, weather_data, relativeHeight, true);
-        //    if(cloud_test == 0.0){
-        //        //samplepoint += stepSampling;
-        //        posInAtm += t * rayDirection;
-        //    }       
-        //}
+            }
+            else{
+                cloud_test = 0.0;
+                zero_density_sample_count = 0;
+            }
+        }
+        //Light sampling
+        else{
+            cloud_test = SampleCloudDensity(samplepoint, weather_data, relativeHeight, true);
+            if(cloud_test == 0.0){
+                //samplepoint += stepSampling;
+                posInAtm += t * rayDirection;
+                //t -= stepsize;
+            }       
+        }
 
         if(density >= 1.0){
             density = 1.0;
@@ -335,6 +354,7 @@ void main(){
 
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter);
 
+    //vec3 col = SampleWeatherTexture(vec2(x, y)*0.5 + 0.5);
     //vec3 col = vec3(density, density, density);
     
     color = vec4(col, 1.0);

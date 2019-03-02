@@ -76,9 +76,9 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     this->uniformLowFreqTexture = glGetUniformLocation(shaderID, "lowFrequencyTexture");
     this->uniformHighFreqTexture = glGetUniformLocation(shaderID, "highFrequencyTexture");
     this->uniformWeatherTexture = glGetUniformLocation(shaderID, "WeatherTexture");
-    this->uniformGradientStratusTexture = glGetUniformLocation(shaderID, "GradientStratusTexture");
-    this->uniformGradientCumulusTexture = glGetUniformLocation(shaderID, "GradientCumulusTexture");
-    this->uniformGradientCumulonimbusTexture = glGetUniformLocation(shaderID, "GradientCumulonimbusTexture");
+    //this->uniformGradientStratusTexture = glGetUniformLocation(shaderID, "GradientStratusTexture");
+    //this->uniformGradientCumulusTexture = glGetUniformLocation(shaderID, "GradientCumulusTexture");
+    //this->uniformGradientCumulonimbusTexture = glGetUniformLocation(shaderID, "GradientCumulonimbusTexture");
     this->uniformCurlNoiseTexture = glGetUniformLocation(shaderID, "CurlNoiseTexture");
 }
 

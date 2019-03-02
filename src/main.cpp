@@ -108,10 +108,10 @@ int main(){
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
     Texture * highFreqTexture = new Texture("textures/HighFrequency3DTexture.tga");
-    Texture * weatherTexture = new Texture("textures/weather_model2.tga");
-    Texture * gradientStratus = new Texture("textures/gradient_stratus2d.tga");
-    Texture * gradientCumulus = new Texture("textures/gradient_cumulus2d.tga");
-    Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus2d.tga");
+    Texture * weatherTexture = new Texture("textures/weather_v4.tga");
+    //Texture * gradientStratus = new Texture("textures/gradient_stratus2d.tga");
+    //Texture * gradientCumulus = new Texture("textures/gradient_cumulus2d.tga");
+    //Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus2d.tga");
     Texture * curlNoiseTexture = new Texture("textures/curlNoise.png");
     // Load 3d Texture in RGBA format
     lowfreqTexture->LoadTexture3D();
@@ -120,13 +120,13 @@ int main(){
     // Load 2D texture in RGB format
     weatherTexture->LoadTexture();
     // Load 1D Textures in Grayscale for Height gradient functions
-    gradientStratus->LoadTexture2DGray();
-    gradientCumulus->LoadTexture2DGray();
-    gradientCumulonimbus->LoadTexture2DGray();
+    //gradientStratus->LoadTexture2DGray();
+    //gradientCumulus->LoadTexture2DGray();
+    //gradientCumulonimbus->LoadTexture2DGray();
     curlNoiseTexture->LoadTextureA();
 
     //std::cout<<"width> "<<lowfreqTexture->
-    shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarchingFragment.glsl");
+    shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarching2.glsl");
     Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.03);
     //glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
     GLint indexTexture = 0;
@@ -171,9 +171,9 @@ int main(){
         //glActiveTexture(GL_TEXTURE1);
         //glBindTexture(GL_TEXTURE_2D, weatherTexture->GetID());
         
-        gradientStratus->UseTexture(shader->GetGradientStratusTextureLocation(), indexTexture++);
-        gradientCumulus->UseTexture(shader->GetGradientCumulusTextureLocation(), indexTexture++);
-        gradientCumulonimbus->UseTexture(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
+        //gradientStratus->UseTexture(shader->GetGradientStratusTextureLocation(), indexTexture++);
+        //gradientCumulus->UseTexture(shader->GetGradientCumulusTextureLocation(), indexTexture++);
+        //gradientCumulonimbus->UseTexture(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
         curlNoiseTexture->UseTexture(shader->GetCurlNoiseTextureLocation(), indexTexture++);
         //glUniform1i(shader->GetGradientCumulonimbusTextureLocation(), 2);
         //glActiveTexture(GL_TEXTURE2);
@@ -209,9 +209,10 @@ int main(){
     delete quad;
     delete lowfreqTexture;
     delete weatherTexture;
-    delete gradientStratus;
-    delete gradientCumulus;
-    delete gradientCumulonimbus;
+    delete highFreqTexture;
+    //delete gradientStratus;
+    //delete gradientCumulus;
+    //delete gradientCumulonimbus;
 
     return 0;
     
