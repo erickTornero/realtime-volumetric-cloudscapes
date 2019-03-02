@@ -189,7 +189,7 @@ vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter, float thickness){
 // @brief
 // Get the point of weather texture to sample
 
-vec2 GetPointToSampleInDome(vec3 positionInDome, vec3 eyePosition, vec3 domeCenter, float radiusDome){
+vec2 GetRelativePointToWeatherMap(vec3 positionInDome, vec3 eyePosition, vec3 domeCenter, float radiusDome){
     float r = length(eyePosition - domeCenter);
     float dist = sqrt(radiusDome*radiusDome - r * r);
     vec3 posXmin = eyePosition + vec3(-1.0, 0.0, 0.0) * dist;
@@ -199,10 +199,12 @@ vec2 GetPointToSampleInDome(vec3 positionInDome, vec3 eyePosition, vec3 domeCent
     posZmin.y = 0.0;
     positionInDome.y = 0.0;
 
+    float posx = (positionInDome.x - posXmin.x) / (2.0 * dist); 
+    float posz = (positionInDome.z - posZmin.z) / (2.0 * dist);
 
-    float posx = length(positionInDome - posXmin)/(2 * dist);
-    float posy = length(positionInDome - posZmin)/(2 * dist);
-    vec2 pointSample = vec2(posx, posy);
+    //float posx = length(positionInDome - posXmin)/(2 * dist);
+    //float posy = length(positionInDome - posZmiz)/(2 * dist);
+    vec2 pointSample = vec2(posx, posz);
     return pointSample;
 }
 
@@ -224,14 +226,14 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
     // Apply the height function to base cloud
     // Until here the shape of cloud is defined!
-    base_cloud *= density_height_gradient;
+    base_cloud = base_cloud * density_height_gradient;
 
     // Apply the coverage of data
-    //float cloud_coverage = weather_data.x;
-    //float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
+    float cloud_coverage = weather_data.x;
+    float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
 
     // Get more aestheticcal cloud
-    //base_cloud_with_coverage *= cloud_coverage;
+    base_cloud_with_coverage *= cloud_coverage;
 
     //float final_cloud = base_cloud_with_coverage;
 
@@ -240,36 +242,37 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
     //}
 
-    return clamp(base_cloud, 0.0, 1.0);
-
+    return base_cloud;
+    //return clamp(base_cloud, 0.0, 1.0);
+    //return base_cloud_with_coverage;
 }
 // ** Ray marching algorithm
 
 vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection, vec3 earthCenter){
-    vec3 colorpixel = vec3(0.0);
-    float density = 0.0;
-    float cloud_test = 0.0;
+    vec3 colorpixel     = vec3(0.0);
+    float density       = 0.0;
+    float cloud_test    = 0.0;
     int zero_density_sample_count = 0;
-    int sample_cout = 128; 
-    float thick_ = length(endPoint - startPoint);
-    float stepsize = float(thick_/sample_cout);
-    float start_ = length(startPoint - rayOrigin);
-    float end_   = length(endPoint   - rayOrigin);
-    vec3 stepSampling = rayDirection/sample_cout;
+    int sample_cout     = 128; 
+    float thick_        = length(endPoint - startPoint);
+    float stepsize      = float(thick_/sample_cout);
+    float start_        = length(startPoint - rayOrigin);
+    float end_          = length(endPoint   - rayOrigin);
+    vec3 stepSampling   = rayDirection/sample_cout;
     
     // Start the raymarching loop
     //vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
-    for(float t = start_; t < end_; t+=stepsize){
+    for(float t = start_; t < end_; t += stepsize){
         vec3 posInAtm = rayOrigin + t * rayDirection;
         // Sample the cloud data
         vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
-        vec2 weatherpoint = GetPointToSampleInDome(posInAtm, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+        vec2 weatherpoint = GetRelativePointToWeatherMap(posInAtm, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
         vec3 weather_data = SampleWeatherTexture(weatherpoint);
         float relativeHeight = GetRelativeHeightInAtmosphere(posInAtm, earthCenter);
         //float relativeHeight = GetHeightInAtmosphere(posInAtm, earthCenter, startPoint, rayDirection, rayOrigin, thick_);
         // Start with light test 
         //if(cloud_test > 0.0){
-            
+            samplepoint = KeepInBox(samplepoint);
             float sampled_density = SampleCloudDensity(samplepoint, weather_data, relativeHeight, false);
         //    if(sampled_density == 0.0)
         //        zero_density_sample_count++;
