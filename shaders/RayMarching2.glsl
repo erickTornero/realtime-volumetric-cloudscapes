@@ -246,9 +246,9 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
     // Apply the coverage of data
     float cloud_coverage = weather_data.x;
-
+    //base_cloud = clamp(base_cloud, 0.0, 1.0);
     float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
-
+    //base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     // Get more aestheticcal cloud
     base_cloud_with_coverage *= cloud_coverage;
 
@@ -295,11 +295,11 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
             if(sampled_density == 0.0)
                 zero_density_sample_count++;
             if(zero_density_sample_count != 6){
-                density += sampled_density * 0.0003;
+                density += sampled_density*0.05;
                 //samplepoint += stepSampling;
                 //t += stepsize;
                 //posInAtm = rayOrigin +  t * rayDirection;
-                colorpixel += vec3(density);
+                colorpixel += vec3(sampled_density * 0.05);
                 if(sampled_density < 0){
                     colorpixel = vec3(0.0);
                     break;

@@ -108,7 +108,7 @@ int main(){
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
     Texture * highFreqTexture = new Texture("textures/HighFrequency3DTexture.tga");
-    Texture * weatherTexture = new Texture("textures/weather_v4.tga");
+    Texture * weatherTexture = new Texture("textures/weathermap.png");
     //Texture * gradientStratus = new Texture("textures/gradient_stratus2d.tga");
     //Texture * gradientCumulus = new Texture("textures/gradient_cumulus2d.tga");
     //Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus2d.tga");
@@ -118,7 +118,7 @@ int main(){
     // Load 3d texture
     highFreqTexture->LoadTexture3D();
     // Load 2D texture in RGB format
-    weatherTexture->LoadTexture();
+    weatherTexture->LoadTextureA();
     // Load 1D Textures in Grayscale for Height gradient functions
     //gradientStratus->LoadTexture2DGray();
     //gradientCumulus->LoadTexture2DGray();
