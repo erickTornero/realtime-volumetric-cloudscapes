@@ -314,20 +314,20 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
     // Apply the coverage of data
     float cloud_coverage = weather_data.x;
-    //base_cloud = clamp(base_cloud, 0.0, 1.0);
+    base_cloud = clamp(base_cloud, cloud_coverage, 1.0);
     float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
-    //base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
+    base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     // Get more aestheticcal cloud
     base_cloud_with_coverage *= cloud_coverage;
 
-    base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
+    //base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     
     float final_cloud = base_cloud_with_coverage;
 
     if(!ischeap && base_cloud_with_coverage > 0.0){
         // sample high frequency texture
         vec3 curl_noise = SampleCurlNoiseTexture(samplepoint.xy);
-        samplepoint.xy = samplepoint.xy + curl_noise.xy * (1.0 - relativeHeight);
+        samplepoint.xy = samplepoint.xy + curl_noise.xy * (1.0 - relativeHeight) * 0.5;
         vec3 high_frequency_noises = SampleHighFrequencyTexture(samplepoint);
 
         float high_freq_FBM =     (high_frequency_noises.x * 0.625 )
@@ -336,10 +336,10 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
         // TODO: Paper propose other way to compute the height_fraction
         float high_freq_noise_modifier = mix(high_freq_FBM, 1.0 - high_freq_FBM, clamp(relativeHeight * 2.0, 0.0, 1.0));
-        
-        //high_freq_noise_modifier = clamp(high_freq_noise_modifier, 0.0, 1.0);
+        high_freq_noise_modifier = clamp(high_freq_noise_modifier, 0.0, 1.0);
+        base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.005*high_freq_noise_modifier, 1.0);
         // Erode by remapping:
-        final_cloud = Remap(base_cloud_with_coverage, high_freq_noise_modifier * 0.2, 1.0, 0.0, 1.0); 
+        final_cloud = Remap(base_cloud_with_coverage, high_freq_noise_modifier * 0.005, 1.0, 0.0, 1.0);
         final_cloud = clamp(final_cloud, 0.0, 1.0);
     }
 
