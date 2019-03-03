@@ -483,19 +483,30 @@ void main(){
     }
 
     vec3 skycolor = vec3(0.054687, 0.3, 0.57);
+    // ** Perform the color of Sun
+    vec3 sunLightDirection = normalize(SunLocation - rayOrigin);
+    // ** Dot product to get the intensity of sun at some direction
+    float sunFactorEnergy = dot(sunLightDirection, rayDirection);
+    sunFactorEnergy = exp(2000.0 * (sunFactorEnergy - 1.0));
+    vec3 sunColor = vec3(0.9608, 0.9529, 0.9137);
+
+    skycolor = mix(skycolor, sunColor, sunFactorEnergy);
+
 
     float density = 0.0;
+    
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter, density);
 
-    vec3 col_sky_ = mix(skycolor, col * 0.8, density);
+    vec3 col_sky_ = mix(skycolor * 1.5, col, density);
+    
     //col.x = Remap(skycolor.x, 0.0, col.x, 0.0, 1.0);
     //col.y = Remap(skycolor.y, 0.0, col.y, 0.0, 1.0);
     //col.z = Remap(skycolor.z, 0.0, col.z, 0.0, 1.0);
-    col = skycolor + col;
-    
-    col.x = clamp(col.x, 0.0, 1.0);
-    col.y = clamp(col.y, 0.0, 1.0);
-    col.z = clamp(col.z, 0.0, 1.0);
+    //col = skycolor + col;
+    //
+    //col.x = clamp(col.x, 0.0, 1.0);
+    //col.y = clamp(col.y, 0.0, 1.0);
+    //col.z = clamp(col.z, 0.0, 1.0);
 
     
     //vec3 col = SampleCurlNoiseTexture(vec2(x, y)*0.5 + 0.5);
