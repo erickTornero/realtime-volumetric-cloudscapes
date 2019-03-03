@@ -291,7 +291,7 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
     // Skew in wind direction
 
     samplepoint += relativeHeight * wind_direction * cloud_top_offset * 0.00005;
-    samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.004;
+    samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.001;
 
 
     // Init Low Frequency Sampling ...
@@ -380,7 +380,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
     float density                   = 0.0;
     float cloud_test                = 0.0;
     int zero_density_sample_count   = 0;
-    int sample_cout                 = 256; 
+    int sample_cout                 = 128; 
     float thick_                    = length(endPoint - startPoint);
     float stepsize                  = float(thick_/sample_cout);
     float start_                    = length(startPoint - rayOrigin);
@@ -390,30 +390,30 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
     // Henyey Greenstein factor in light Sampling
     // Ray Light direction
 
-    vec3 lightDirection = normalize(SunLocation - rayOrigin);
+    vec3 lightDirection             = normalize(SunLocation - rayOrigin);
     // g: eccentricity 0.2, proposed by paper
-    float henyeyGreensteinFactor = HenyeyGreenstein(lightDirection, rayDirection, 0.2);
+    float henyeyGreensteinFactor    = HenyeyGreenstein(lightDirection, rayDirection, 0.2);
     // Get the noise Kernell size 6
-    vec3 noise_kernel[6] = GetNoiseKernel(lightDirection);
+    vec3 noise_kernel[6]            = GetNoiseKernel(lightDirection);
 
     // Start the raymarching loop
     //vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
     for(float t = start_; t < end_; t += stepsize){
         vec3 posInAtm = rayOrigin + t * rayDirection;
         // Sample the cloud data
-        vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
-        vec2 weatherpoint = GetRelativePointToWeatherMap(posInAtm, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
-        vec3 weather_data = SampleWeatherTexture(weatherpoint);
-        float relativeHeight = GetRelativeHeightInAtmosphere(posInAtm, earthCenter);
+        vec3 samplepoint            = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
+        vec2 weatherpoint           = GetRelativePointToWeatherMap(posInAtm, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+        vec3 weather_data           = SampleWeatherTexture(weatherpoint);
+        float relativeHeight        = GetRelativeHeightInAtmosphere(posInAtm, earthCenter);
         //float relativeHeight = GetHeightInAtmosphere(posInAtm, earthCenter, startPoint, rayDirection, rayOrigin, thick_);
         // Start with light test 
         if(cloud_test > 0.0){
-            samplepoint = KeepInBox(samplepoint);
+            //samplepoint = KeepInBox(samplepoint);
             float sampled_density = SampleCloudDensity(samplepoint, weather_data, relativeHeight, false);
             if(sampled_density == 0.0)
                 zero_density_sample_count++;
             if(zero_density_sample_count != 6){
-                density += sampled_density * 0.1;
+                density += sampled_density * 0.05;
 
                 // Start the light sampling
                 if(sampled_density != 0.0){
@@ -423,7 +423,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
                     float transmitance = 1.0;
                     transmitance = mix(transmitance, totalEnergy, (1.0 - density));
 
-                    colorpixel += vec3(transmitance * 0.1);
+                    colorpixel += vec3(transmitance * 0.5);
                 }
                 //samplepoint += stepSampling;
                 //t += stepsize;
@@ -462,19 +462,19 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
 
 
 void main(){
-    float aspecRatio = screenWidth / screenHeight;
-    vec3 rayOrigin = cameraPosition;
-    float x = aspecRatio * (2.0 * gl_FragCoord.x/screenWidth - 1.0);
-    float y = 2.0 * gl_FragCoord.y / screenHeight - 1.0;
+    float aspecRatio    = screenWidth / screenHeight;
+    vec3  rayOrigin     = cameraPosition;
+    float x             = aspecRatio * (2.0 * gl_FragCoord.x/screenWidth - 1.0);
+    float y             = 2.0 * gl_FragCoord.y / screenHeight - 1.0;
 
     // Get ray Direction
 
-    vec3 rayDirection = GetRayDirection(cameraFront, cameraRight, cameraUp, x, y);
+    vec3 rayDirection       = GetRayDirection(cameraFront, cameraRight, cameraUp, x, y);
     
-    vec3 earthCenter = vec3(rayOrigin.x, rayOrigin.y - EARTH_RADIUS, rayOrigin.z);
+    vec3 earthCenter        = vec3(rayOrigin.x, rayOrigin.y - EARTH_RADIUS, rayOrigin.z);
 
-    vec3 innerIntersection = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_INNER_RADIUS);
-    vec3 outerIntersection = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+    vec3 innerIntersection  = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_INNER_RADIUS);
+    vec3 outerIntersection  = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_OUTER_RADIUS);
 
     if(dot(vec3(0.0, 1.0, 0.0), rayDirection) < 0.0){
         vec3 colorNearHorizon = vec3(0.54, 0.23, 0.046) * 0.4;
