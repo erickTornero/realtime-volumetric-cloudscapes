@@ -227,6 +227,19 @@ vec2 GetRelativePointToWeatherMap(vec3 positionInDome, vec3 eyePosition, vec3 do
 
 // SampleCloudDensity
 float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeight, bool ischeap){
+    // Add movement to textures
+    vec3 wind_direction = vec3(1.0, 0.0, 0.0);
+    float cloud_speed = 5.0;
+
+    float cloud_top_offset = 1.0;
+
+    // Skew in wind direction
+
+    samplepoint += relativeHeight * wind_direction * cloud_top_offset * 0.00005;
+    samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.005;
+
+
+    // Init Low Frequency Sampling ...
     vec4 low_frequency_noises = SampleLowFrequencyTexture(samplepoint);
 
     // Perly Worley noise:
@@ -310,11 +323,11 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
             if(sampled_density == 0.0)
                 zero_density_sample_count++;
             if(zero_density_sample_count != 6){
-                density += sampled_density*0.05;
+                density += sampled_density*0.1;
                 //samplepoint += stepSampling;
                 //t += stepsize;
                 //posInAtm = rayOrigin +  t * rayDirection;
-                colorpixel += vec3(sampled_density * 0.05);
+                colorpixel += vec3(sampled_density * 0.1);
                 if(sampled_density < 0){
                     colorpixel = vec3(0.0);
                     break;
@@ -366,9 +379,19 @@ void main(){
         color =  vec4(colorNearHorizon, 1.0);
         return;
     }
-
+    vec3 skycolor = vec3(0.054687, 0.3, 0.57);
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter);
 
+    //col.x = Remap(skycolor.x, 0.0, col.x, 0.0, 1.0);
+    //col.y = Remap(skycolor.y, 0.0, col.y, 0.0, 1.0);
+    //col.z = Remap(skycolor.z, 0.0, col.z, 0.0, 1.0);
+    col = skycolor + col;
+    
+    col.x = clamp(col.x, 0.0, 1.0);
+    col.y = clamp(col.y, 0.0, 1.0);
+    col.z = clamp(col.z, 0.0, 1.0);
+
+    
     //vec3 col = SampleCurlNoiseTexture(vec2(x, y)*0.5 + 0.5);
     //vec3 col = vec3(density, density, density);
     //color = vec4(col.xy, 0.0, 1.0);
