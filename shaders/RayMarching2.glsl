@@ -224,6 +224,28 @@ vec2 GetRelativePointToWeatherMap(vec3 positionInDome, vec3 eyePosition, vec3 do
     return pointSample;
 }
 
+/*
+ * @brief: HenyeyGreenstein function
+ * This function models the atenuation of borders in light scattering
+ */
+float HenyeyGreenstein(in vec3 inLightVector, in vec3 inViewVector, in float g){
+    // Cos of angle
+    float cos_angle = dot(normalize(inLightVector), normalize(inViewVector));
+
+    // Define the HenyeyGreenstein function
+    return (1.0 - g * g)/(pow(1.0 + g * g - 2.0 * g * cos_angle, 1.50) * 4 * MPI);
+}
+
+float GetLightEnergy(in vec3 lightVector, in vec3 rayDirection, float density, float probRain, float g){
+    float beer_laws = 2.0 * exp( -density * probRain);
+    float powdered_sugar = 1.0 - exp( -2.0 * density);
+
+    float henyeyGreensteinFactor = HenyeyGreenstein(lightVector, rayDirection, g);
+    float totalEnergy = beer_laws * powdered_sugar * henyeyGreensteinFactor;
+
+    return totalEnergy;
+}
+
 
 // SampleCloudDensity
 float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeight, bool ischeap){
@@ -323,7 +345,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
             if(sampled_density == 0.0)
                 zero_density_sample_count++;
             if(zero_density_sample_count != 6){
-                density += sampled_density*0.1;
+                density += sampled_density * 0.1;
                 //samplepoint += stepSampling;
                 //t += stepsize;
                 //posInAtm = rayOrigin +  t * rayDirection;
@@ -343,7 +365,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
             cloud_test = SampleCloudDensity(samplepoint, weather_data, relativeHeight, true);
             if(cloud_test == 0.0){
                 //samplepoint += stepSampling;
-                posInAtm += t * rayDirection;
+                //posInAtm += t * rayDirection;
                 //t -= stepsize;
             }       
         }
@@ -379,6 +401,7 @@ void main(){
         color =  vec4(colorNearHorizon, 1.0);
         return;
     }
+
     vec3 skycolor = vec3(0.054687, 0.3, 0.57);
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter);
 
