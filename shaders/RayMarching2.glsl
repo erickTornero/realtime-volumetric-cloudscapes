@@ -25,7 +25,7 @@ const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 1500.0;
 const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + THICK_ATMOSPHERE;
 
 // The Sun Location
-const vec3 SunLocation = vec3(0.0, ATMOSPHERE_OUTER_RADIUS * 0.5, 5 * EARTH_RADIUS);
+const vec3 SunLocation = vec3(0.0, ATMOSPHERE_OUTER_RADIUS * 0.5, 2 * EARTH_RADIUS);
 
 // ** Definition of samplers
 
@@ -161,7 +161,7 @@ float GetDensityHeightGradientForPoint(vec3 point, vec3 weather_data, float rela
     else if(cloudt > 0.9)
         cloudtype = 2;
     
-    //cloudtype = 0;
+    //cloudtype = 2;
     // Relative Height from [0 - 1]
     //float relh = point.y;
     //float relativeHeight = GetRelativeHeightInAtmosphere(point, earthCenter);
@@ -336,7 +336,7 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
                                 + (high_frequency_noises.z * 0.125 );
 
         // TODO: Paper propose other way to compute the height_fraction
-        float high_freq_noise_modifier = mix(high_freq_FBM, 1.0 - high_freq_FBM, clamp(relativeHeight * 2.0, 0.0, 1.0));
+        float high_freq_noise_modifier = mix(high_freq_FBM, 1.0 - high_freq_FBM, clamp(relativeHeight * 10.0, 0.0, 1.0));
         //high_freq_noise_modifier *= 0.35 * exp(-cloud_coverage * 0.75);
         
         high_freq_noise_modifier = clamp(high_freq_noise_modifier, 0.0, 1.0);
@@ -383,7 +383,8 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
     float density                   = 0.0;
     float cloud_test                = 0.0;
     int zero_density_sample_count   = 0;
-    int sample_cout                 = 128; 
+    //int sample_cout                 = 128;
+    int sample_cout                 = 128 - 64 * int(dot(rayDirection, vec3(0.0, 1.0, 0.0))); 
     float thick_                    = length(endPoint - startPoint);
     float stepsize                  = float(thick_/sample_cout);
     float start_                    = length(startPoint - rayOrigin);
@@ -431,7 +432,9 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
                     float transmitance = 1.0;
                     transmitance = mix(transmitance, totalEnergy, (1.0 - density));
 
-                    colorpixel += vec3(transmitance * 0.06);
+                    //colorpixel += vec3(transmitance * 0.06);
+                    
+                    colorpixel += vec3(totalEnergy * 1.0);
                 }
                 //samplepoint += stepSampling;
                 //t += stepsize;
