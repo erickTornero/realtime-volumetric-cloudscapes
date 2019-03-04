@@ -89,7 +89,7 @@ Mesh * CreateQuad(){
 }
 
 int main(){
-    Window * window = new Window();
+    Window * window = new Window(480,320);
     window->Initialize("Window of Clouds");
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK){
@@ -141,6 +141,9 @@ int main(){
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader->UseShader();
 
+
+        glUniform1f(shader->GetScreenWidthLocation(), GLfloat(bufferWidth));
+        glUniform1f(shader->GetScreenHeightLocation(), GLfloat(bufferHeight));
         /*
          *   Camera plane model
         */
@@ -192,8 +195,6 @@ int main(){
         quadstatic->RenderMesh();
         */
         //glUniform()
-        glUniform1f(shader->GetScreenWidthLocation(), GLfloat(bufferWidth));
-        glUniform1f(shader->GetScreenHeightLocation(), GLfloat(bufferHeight));
         indexTexture = 0;
         
         glUseProgram(0);

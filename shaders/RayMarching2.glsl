@@ -25,7 +25,7 @@ const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 1500.0;
 const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + THICK_ATMOSPHERE;
 
 // The Sun Location
-const vec3 SunLocation = vec3(0.0, ATMOSPHERE_OUTER_RADIUS * 0.9, -ATMOSPHERE_OUTER_RADIUS * 0.9);
+const vec3 SunLocation = vec3(0.0, ATMOSPHERE_OUTER_RADIUS * 0.5, 5 * EARTH_RADIUS);
 
 // ** Definition of samplers
 
@@ -48,7 +48,7 @@ vec3 SampleCurlNoiseTexture(vec2 point){
 
 // ** Get ray direction definition
 vec3 GetRayDirection(vec3 front, vec3 right, vec3 up, float x, float y){
-    vec3 ray = 5 * front + right * x + up * y;
+    vec3 ray = 3 * front + right * x + up * y;
     return normalize(ray);
 }
 // ** Remap function defined by the author of paper
@@ -161,6 +161,7 @@ float GetDensityHeightGradientForPoint(vec3 point, vec3 weather_data, float rela
     else if(cloudt > 0.9)
         cloudtype = 2;
     
+    //cloudtype = 0;
     // Relative Height from [0 - 1]
     //float relh = point.y;
     //float relativeHeight = GetRelativeHeightInAtmosphere(point, earthCenter);
@@ -254,7 +255,7 @@ float GetLightEnergy(float density, float probRain, float henyeyGreensteinFactor
 vec3 [6] GetNoiseKernel(vec3 lightDirection){
     vec3 maxCompUnitVector;
     if(abs(lightDirection.x) > abs(lightDirection.y) && (abs(lightDirection.x) > abs(lightDirection.z))){
-        maxCompUnitVector = vec3(abs(lightDirection.x), 0.0, 0.0);
+        maxCompUnitVector = vec3( abs(lightDirection.x), 0.0, 0.0);
     }
     else if(abs(lightDirection.y) > abs(lightDirection.x) && (abs(lightDirection.y) > abs(lightDirection.z))){
         maxCompUnitVector = vec3(0.0, abs(lightDirection.y), 0.0);
@@ -336,10 +337,12 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
 
         // TODO: Paper propose other way to compute the height_fraction
         float high_freq_noise_modifier = mix(high_freq_FBM, 1.0 - high_freq_FBM, clamp(relativeHeight * 2.0, 0.0, 1.0));
+        //high_freq_noise_modifier *= 0.35 * exp(-cloud_coverage * 0.75);
+        
         high_freq_noise_modifier = clamp(high_freq_noise_modifier, 0.0, 1.0);
-        base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.005*high_freq_noise_modifier, 1.0);
+        base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.005 * high_freq_noise_modifier, 1.0);
         // Erode by remapping:
-        final_cloud = Remap(base_cloud_with_coverage, high_freq_noise_modifier * 0.005, 1.0, 0.0, 1.0);
+        final_cloud = Remap(base_cloud_with_coverage, 0.005 * high_freq_noise_modifier, 1.0, 0.0, 1.0);
         final_cloud = clamp(final_cloud, 0.0, 1.0);
     }
 
@@ -392,7 +395,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
 
     vec3 lightDirection             = normalize(SunLocation - rayOrigin);
     // g: eccentricity 0.2, proposed by paper
-    float henyeyGreensteinFactor    = HenyeyGreenstein(lightDirection, rayDirection, 0.2);
+    float henyeyGreensteinFactor    = HenyeyGreenstein(lightDirection, rayDirection, 0.3);
     // Get the noise Kernell size 6
     vec3 noise_kernel[6]            = GetNoiseKernel(lightDirection);
 
@@ -413,17 +416,22 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
             if(sampled_density == 0.0)
                 zero_density_sample_count++;
             if(zero_density_sample_count != 6){
-                density += sampled_density * 0.05;
+                density += sampled_density * 0.07;
 
                 // Start the light sampling
                 if(sampled_density != 0.0){
                     // Make the Light Sampling
+                    float precipitation;
+                    if(weather_data.z > 0.9) precipitation = 15.0;
+                    else if(weather_data.z < 0.1) precipitation = 0.05;
+                    else precipitation = 5.0;
+
                     float density_along_light_ray = SampleCloudDensityAlongCone(posInAtm, rayOrigin, earthCenter, stepsize, noise_kernel);
-                    float totalEnergy = GetLightEnergy(density_along_light_ray, 0.2, henyeyGreensteinFactor); 
+                    float totalEnergy = GetLightEnergy(density_along_light_ray, precipitation, henyeyGreensteinFactor); 
                     float transmitance = 1.0;
                     transmitance = mix(transmitance, totalEnergy, (1.0 - density));
 
-                    colorpixel += vec3(transmitance * 0.5);
+                    colorpixel += vec3(transmitance * 0.06);
                 }
                 //samplepoint += stepSampling;
                 //t += stepsize;
@@ -490,14 +498,16 @@ void main(){
     sunFactorEnergy = exp(2000.0 * (sunFactorEnergy - 1.0));
     vec3 sunColor = vec3(0.9608, 0.9529, 0.9137);
 
-    skycolor = mix(skycolor, sunColor, sunFactorEnergy);
+    //skycolor = mix(skycolor, sunColor, sunFactorEnergy);
 
 
     float density = 0.0;
     
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter, density);
 
-    vec3 col_sky_ = mix(skycolor * 1.5, col, density);
+    vec3 sk_c = mix(col,  10.0 * sunColor, sunFactorEnergy);
+    vec3 col_sky_ = mix(skycolor, sk_c * 2.0, density);
+    //vec3 col_sky_ = mix(skycolor * 1.5, col, density);
     
     //col.x = Remap(skycolor.x, 0.0, col.x, 0.0, 1.0);
     //col.y = Remap(skycolor.y, 0.0, col.y, 0.0, 1.0);
