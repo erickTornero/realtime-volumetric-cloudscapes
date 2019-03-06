@@ -42,6 +42,8 @@ public:
     GLint GetGradientCumulonimbusTextureLocation();
 
     GLint GetCurlNoiseTextureLocation();
+
+    GLint GetEarthCenterLocation();
     void UseShader();
     
     ~Shader();
@@ -67,6 +69,8 @@ private:
     GLint uniformCurlNoiseTexture;
     //GLint uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection;
     GLint uniformScreenWidth, uniformScreenHeight;
+    // Allow movility of camera:
+    GLint uniformEarthCenter;
     void CompileShader(const char * vertexCode, const char * fragmentCode);
     void AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType);
     void ClearShader();

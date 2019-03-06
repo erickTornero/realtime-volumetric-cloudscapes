@@ -16,6 +16,7 @@ Shader::Shader(){
     this->uniformGradientCumulusTexture = 0;
     this->uniformGradientCumulonimbusTexture = 0;
     this->uniformCurlNoiseTexture = 0;
+    this->uniformEarthCenter = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -80,6 +81,7 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     //this->uniformGradientCumulusTexture = glGetUniformLocation(shaderID, "GradientCumulusTexture");
     //this->uniformGradientCumulonimbusTexture = glGetUniformLocation(shaderID, "GradientCumulonimbusTexture");
     this->uniformCurlNoiseTexture = glGetUniformLocation(shaderID, "CurlNoiseTexture");
+    this->uniformEarthCenter = glGetUniformLocation(shaderID, "EarthCenter");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -173,6 +175,9 @@ GLint Shader::GetHighFreqTextureLocation(){
 GLint Shader::GetCurlNoiseTextureLocation(){
     return this->uniformCurlNoiseTexture;
 }
+GLint Shader::GetEarthCenterLocation(){
+    return this->uniformEarthCenter;
+}
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -199,6 +204,7 @@ void Shader::ClearShader(){
     this->uniformGradientCumulonimbusTexture = 0;
     this->uniformHighFreqTexture = 0;
     this->uniformCurlNoiseTexture = 0;
+    this->uniformEarthCenter = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

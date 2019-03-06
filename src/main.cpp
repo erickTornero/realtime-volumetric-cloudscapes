@@ -89,7 +89,7 @@ Mesh * CreateQuad(){
 }
 
 int main(){
-    Window * window = new Window(480,320);
+    Window * window = new Window(640, 480);
     window->Initialize("Window of Clouds");
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK){
@@ -108,7 +108,7 @@ int main(){
     Shader * shader = new Shader();
     Texture * lowfreqTexture = new Texture("textures/LowFrequency3DTexture.tga");
     Texture * highFreqTexture = new Texture("textures/HighFrequency3DTexture.tga");
-    Texture * weatherTexture = new Texture("textures/weathermap.png");
+    Texture * weatherTexture = new Texture("textures/weather_t1.tga");
     //Texture * gradientStratus = new Texture("textures/gradient_stratus2d.tga");
     //Texture * gradientCumulus = new Texture("textures/gradient_cumulus2d.tga");
     //Texture * gradientCumulonimbus = new Texture("textures/gradient_cumulonimbus2d.tga");
@@ -118,7 +118,7 @@ int main(){
     // Load 3d texture
     highFreqTexture->LoadTexture3D();
     // Load 2D texture in RGB format
-    weatherTexture->LoadTextureA();
+    weatherTexture->LoadTexture();
     // Load 1D Textures in Grayscale for Height gradient functions
     //gradientStratus->LoadTexture2DGray();
     //gradientCumulus->LoadTexture2DGray();
@@ -127,7 +127,9 @@ int main(){
 
     //std::cout<<"width> "<<lowfreqTexture->
     shader->CreateFromFile("shaders/vertex.glsl", "shaders/RayMarching2.glsl");
-    Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 5.0, 0.03);
+    Camera * camera = new Camera(glm::vec3(0.0, 0.0, -2.0), glm::vec3(0.0, 1.0, 0.0), -90.0, 0.0, 500.0, 0.03);
+    // Seth the initial position of earth
+    glm::vec3 earthCenter = camera->getCameraPosition() - glm::vec3(0.0, 6378000.0, 0.0);
     //glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
     GLint indexTexture = 0;
     while(!window->getShouldClose()){
@@ -161,6 +163,8 @@ int main(){
         glUniform3fv(shader->GetCamRightLocation(),1, glm::value_ptr(camera->getCameraRight()));
         //glUniform1f()
         glUniform1f(shader->GetTimeLocation(), now);
+        // Pass the earth Center as variable:
+        glUniform3fv(shader->GetEarthCenterLocation(), 1, glm::value_ptr(earthCenter));
         //glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
         lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
@@ -178,6 +182,9 @@ int main(){
         //gradientCumulus->UseTexture(shader->GetGradientCumulusTextureLocation(), indexTexture++);
         //gradientCumulonimbus->UseTexture(shader->GetGradientCumulonimbusTextureLocation(), indexTexture++);
         curlNoiseTexture->UseTexture(shader->GetCurlNoiseTextureLocation(), indexTexture++);
+        std::cout<<camera->getCameraPosition().x<<", "<<camera->getCameraPosition().y<<", "<<camera->getCameraPosition().z<<std::endl;
+        
+        
         //glUniform1i(shader->GetGradientCumulonimbusTextureLocation(), 2);
         //glActiveTexture(GL_TEXTURE2);
         //glBindTexture(GL_TEXTURE_2D, gradientCumulonimbus->GetID());
