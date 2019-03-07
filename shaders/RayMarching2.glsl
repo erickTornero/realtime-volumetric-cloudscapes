@@ -14,10 +14,10 @@ uniform float screenHeight;
 uniform float Time;
 
 // Halton Sequences
-uniform vec4 HaltonSequence1;
-uniform vec4 HaltonSequence2;
-uniform vec4 HaltonSequence3;
-uniform vec4 HaltonSequence4;
+uniform vec4 HaltonSequence;
+//uniform vec4 HaltonSequence2;
+//uniform vec4 HaltonSequence3;
+//uniform vec4 HaltonSequence4;
 
 uniform sampler3D lowFrequencyTexture;
 uniform sampler3D highFrequencyTexture;
@@ -33,7 +33,8 @@ const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 10500.0;
 const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + THICK_ATMOSPHERE;
 
 // The Sun Location
-const vec3 SunLocation = vec3(0.0, ATMOSPHERE_OUTER_RADIUS * 0.5, 2 * EARTH_RADIUS);
+const vec3 SunLocation = vec3(0.0, ATMOSPHERE_OUTER_RADIUS * 2, 2 * EARTH_RADIUS);
+const float SunIntensity = 0.35;
 
 // ** Definition of samplers
 
@@ -312,15 +313,15 @@ vec3 [6] GetNoiseKernel(vec3 lightDirection){
 // SampleCloudDensity
 float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeight, bool ischeap){
     // Add movement to textures
-    //vec3 wind_direction = vec3(1.0, 0.0, 0.0);
-    //float cloud_speed = 10.0;
-//
-    //float cloud_top_offset = 5.0;
-//
-    //// Skew in wind direction
-//
-    //samplepoint += relativeHeight * wind_direction * cloud_top_offset * 0.00005;
-    //samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.0001;
+    vec3 wind_direction = vec3(1.0, 0.0, 0.0);
+    float cloud_speed = 10.0;
+
+    float cloud_top_offset = 5.0;
+
+    // Skew in wind direction
+
+    samplepoint += relativeHeight * wind_direction * cloud_top_offset * 0.005;
+    samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.001;
 
 
     // Init Low Frequency Sampling ...
@@ -332,7 +333,7 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
                          low_frequency_noises.a * 0.125;
 
 
-    low_freq_FBM = clamp(low_freq_FBM, 0.0, 1.0);
+    //low_freq_FBM = clamp(low_freq_FBM, 0.0, 1.0);
 
 
     // Remap with worley noise
@@ -414,37 +415,79 @@ vec2 getJitterOffset (int index, vec2 dim)
     //index is a value from 0-15
     //Use pre generated halton sequence to jitter point --> halton sequence is a low discrepancy sampling pattern
     vec2 jitter = vec2(0.0);
-    index = index/2;
-    if(index < 4)
-    {
-        jitter.x = HaltonSequence1[index];
-        jitter.y = HaltonSequence2[index];
-    }
-    else
-    {
-        index -= 4;
-        jitter.x = HaltonSequence3[index];
-        jitter.y = HaltonSequence4[index];
-    }
+    //index = index/2;
+    jitter.x = HaltonSequence.x;
+    jitter.y = HaltonSequence.y;
     return jitter/dim;
 }
-float getJitterOffset (in int index, float maxOffset) 
+//* Test Ambient color
+float calcSunIntensity() 
 {
-    //index is a value from 0-15
-    //Use pre generated halton sequence to jitter point --> halton sequence is a low discrepancy sampling pattern
-    float jitter = 0.0;
-    index = index/2;
-    if(index < 4)
-    {
-        jitter = HaltonSequence1[index];
-    }
-    else
-    {
-        index -= 4;
-        jitter = HaltonSequence2[index];
-    }
-    return jitter*maxOffset;
+	float zenithAngleCos = clamp(normalize(SunLocation).y, -1.0, 1.0);
+	return 1000.0 * max(0.0, 1.0 - pow(2.71828, -((1.6110731557 - acos(zenithAngleCos)) / 1.5)));
 }
+vec3 calcSkyBetaR() 
+{
+    vec3 rayleigh_total = vec3(5.804542996261093e-6, 1.3562911419845635e-5, 3.0265902468824876e-5);
+	float rayleigh = 2.0;
+  	float sunFade = 1.0 - clamp(1.0 - exp(SunLocation.y / 450000.0), 0.0, 1.0);
+	return vec3(rayleigh_total * (rayleigh - 1.0 + sunFade)); 
+}
+
+vec3 calcSkyBetaV() 
+{
+    vec3 mie_const = vec3( 1.839991851443397, 2.779802391966052, 4.079047954386109);
+	float turbidity = 10.0;
+	float mie = 0.005;
+    float c = (0.2 * turbidity) * 10e-18;
+    return vec3(0.434 * c * mie_const * mie);
+}
+float rayleighPhase(float cosTheta) 
+{
+    return 3 * (1.0 + cosTheta * cosTheta)/(16.0*MPI);
+}
+vec3 getAtmosphereColorPhysical(vec3 dir, vec3 sunDir, float sunIntensity) 
+{
+    vec3 localcolor = vec3(0);
+
+    sunDir = normalize(sunDir); 
+    float sunE = sunIntensity * calcSunIntensity(); 
+    vec3 BetaR = calcSkyBetaR();   
+    vec3 BetaM = calcSkyBetaV(); 
+
+    // optical length
+    float zenith = acos(max(0.0, dir.y)); // acos?
+    float inverse = 1.0 / (cos(zenith) + 0.15 * pow(93.885 - ((zenith * 180.0) / MPI), -1.253));
+    float sR = 8.4e3 * inverse;
+    float sM = 1.25e3 * inverse;
+
+    vec3 fex = exp( -BetaR * sR + BetaM * sM);
+
+    float cosTheta = dot(sunDir, dir);
+
+    float rPhase = rayleighPhase(cosTheta * 0.5 + 0.5);
+    vec3 betaRTheta = BetaR * rPhase;
+    float mie_directional = 0.8;
+    float mPhase = HenyeyGreenstein(dir, sunDir, mie_directional);
+    vec3 betaMTheta = BetaM * mPhase;
+
+    float yDot = 1.0 - sunDir.y;
+    yDot *= yDot * yDot * yDot * yDot;
+    vec3 betas = (betaRTheta + betaMTheta) / (BetaR + BetaM);
+    vec3 Lin = pow(sunE * (betas) * (1.0 - fex), vec3(1.5));
+    Lin *= mix(vec3(1), pow(sunE * (betas) * fex, vec3(0.5)), clamp(yDot, 0.0, 1.0));
+
+    vec3 L0 = 0.1 * fex;
+    float sun_angular_cos = 0.999956676946448;
+    float sunDisk = smoothstep(sun_angular_cos, sun_angular_cos + 0.00002, cosTheta);
+    L0 += (sunE * 15000.0 * fex) * sunDisk;
+
+    localcolor = (Lin + L0) * 0.04 + vec3(0.0, 0.0003, 0.00075);
+
+    // return color in HDR space
+    return localcolor;
+}
+
 
 
 //* End jitter options
@@ -483,7 +526,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
     // Start the raymarching loop
     //vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
     for(float t = start_; t < end_; t += stepsize){
-        vec2 jitterLoc = getJitterOffset(1, vec2(80.0));
+        vec2 jitterLoc = getJitterOffset(0, vec2(80.0));
         vec3 posInAtm = rayOrigin + t * (rayDirection + vec3(jitterLoc.x, (jitterLoc.x + jitterLoc.y)*4.0, jitterLoc.y));
         // Sample the cloud data
         //vec3 samplepoint            = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
@@ -515,7 +558,7 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
                     float transmitance = 1.0;
                     transmitance = mix(density, totalEnergy, (1.0 - density_along_light_ray));
                     //transmitance = clamp(transmitance, 0.0, 1.0);
-                    colorpixel += vec3(transmitance * 0.2);
+                    colorpixel += vec3(transmitance * 0.4);
                     //colorpixel += vec3(sampled_density);
                     //colorpixel += vec3(totalEnergy * 1.0);
                 }
@@ -577,12 +620,16 @@ void main(){
         return;
     }
     else if(dot(vec3(0.0, 1.0, 0.0), rayDirection) < 0.06){
+        vec3 skycolor = getAtmosphereColorPhysical(rayDirection, SunLocation - rayOrigin, SunIntensity);
+        skycolor *= 0.620;
         //vec3 colorNearHorizon = vec3(0.1, 0.1, 0.1);
         //color = vec4(colorNearHorizon, 1.0);
-        //return;
+        color = vec4(skycolor, 1.0);
+        return;
     }
-
-    vec3 skycolor = vec3(0.054687, 0.3, 0.57);
+    vec3 skycolor = getAtmosphereColorPhysical(rayDirection, SunLocation - rayOrigin, SunIntensity);
+    skycolor *= 0.62;
+    //vec3 skycolor = vec3(0.054687, 0.3, 0.57);
     // ** Perform the color of Sun
     vec3 sunLightDirection = normalize(SunLocation - rayOrigin);
     // ** Dot product to get the intensity of sun at some direction
@@ -590,13 +637,14 @@ void main(){
     sunFactorEnergy = exp(2000.0 * (sunFactorEnergy - 1.0));
     vec3 sunColor = vec3(0.9608, 0.9529, 0.9137);
 
-    skycolor = mix(skycolor, 2.0 * sunColor, sunFactorEnergy);
+    //skycolor = mix(skycolor, 2.0 * sunColor, sunFactorEnergy);
 
     
     float density = 0.0;
     
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter, density);
 
+    density *= smoothstep(0.0, 1.0, min(1.0, Remap(rayDirection.y, 0.06, 0.4, 0.0, 1.0)));
     //vec3 sk_c = mix(col,  10.0 * sunColor, sunFactorEnergy);
     vec3 col_sky_ = mix(skycolor, col, density);
     

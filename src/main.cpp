@@ -62,12 +62,18 @@ float HaltonSequenceAt(int index, int base)
 
 	return r;
 }
-void ComputeHaltonVectors(glm::vec4 & haltonSeq1, glm::vec4 & haltonSeq2, glm::vec4 & haltonSeq3, glm::vec4 & haltonSeq4){
+void ComputeHaltonVectors(glm::vec2 & haltonSeq){
+    haltonSeq.x = HaltonSequenceAt(1, 3);
+    haltonSeq.y = HaltonSequenceAt(5, 3);
+}
+/*void ComputeHaltonVectors(glm::vec4 & haltonSeq1, glm::vec4 & haltonSeq2, glm::vec4 & haltonSeq3, glm::vec4 & haltonSeq4){
     haltonSeq1.x = HaltonSequenceAt(1, 3);
+	haltonSeq1.y = HaltonSequenceAt(5, 3);
+    /*haltonSeq1.x = HaltonSequenceAt(1, 3);
 	haltonSeq1.y = HaltonSequenceAt(2, 3);
 	haltonSeq1.z = HaltonSequenceAt(3, 3);
 	haltonSeq1.w = HaltonSequenceAt(4, 3);
-
+    *//*
 	haltonSeq2.x = HaltonSequenceAt(5, 3);
 	haltonSeq2.y = HaltonSequenceAt(6, 3);
 	haltonSeq2.z = HaltonSequenceAt(7, 3);
@@ -82,7 +88,7 @@ void ComputeHaltonVectors(glm::vec4 & haltonSeq1, glm::vec4 & haltonSeq2, glm::v
 	haltonSeq4.y = HaltonSequenceAt(14, 3);
 	haltonSeq4.z = HaltonSequenceAt(15, 3);
     haltonSeq4.w = HaltonSequenceAt(16, 3);
-}
+}*/
 
 
 Mesh * CreateTriangle(){
@@ -171,8 +177,8 @@ int main(){
     glm::vec3 earthCenter = camera->getCameraPosition() - glm::vec3(0.0, 6378000.0, 0.0);
     //glm::mat4 projection = glm::perspective(45.0f, (GLfloat)bufferWidth/(GLfloat)bufferHeight, 0.1f, 100.0f);
     // Halton matrixes:
-    glm::vec4 haltonS1, haltonS2, haltonS3, haltonS4;
-    ComputeHaltonVectors(haltonS1, haltonS2, haltonS3, haltonS4);
+    glm::vec2 haltonS;//1, haltonS2, haltonS3, haltonS4;
+    ComputeHaltonVectors(haltonS);//, haltonS2, haltonS3, haltonS4);
     // End halton definition
     GLint indexTexture = 0;
     while(!window->getShouldClose()){
@@ -209,10 +215,10 @@ int main(){
         // Pass the earth Center as variable:
         glUniform3fv(shader->GetEarthCenterLocation(), 1, glm::value_ptr(earthCenter));
         // Pass Halton Vectors
-        glUniform4fv(shader->GetHaltonSeq1Location(), 1, glm::value_ptr(haltonS1));
-        glUniform4fv(shader->GetHaltonSeq2Location(), 1, glm::value_ptr(haltonS2));
-        glUniform4fv(shader->GetHaltonSeq3Location(), 1, glm::value_ptr(haltonS3));
-        glUniform4fv(shader->GetHaltonSeq4Location(), 1, glm::value_ptr(haltonS4));
+        glUniform2fv(shader->GetHaltonSeqLocation(), 1, glm::value_ptr(haltonS));
+        //glUniform4fv(shader->GetHaltonSeq2Location(), 1, glm::value_ptr(haltonS2));
+        //glUniform4fv(shader->GetHaltonSeq3Location(), 1, glm::value_ptr(haltonS3));
+        //glUniform4fv(shader->GetHaltonSeq4Location(), 1, glm::value_ptr(haltonS4));
         //glUniform2fv(shader->GetMouseXYLocation(), 1, glm::value_ptr(glm::vec2(window->getXChange(), window->getYChange())));
         quad->RenderMesh();
         lowfreqTexture->UseTexture3D(shader->GetLowFreqTextureLocation(), indexTexture++);
