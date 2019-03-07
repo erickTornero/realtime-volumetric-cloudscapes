@@ -44,6 +44,12 @@ public:
     GLint GetCurlNoiseTextureLocation();
 
     GLint GetEarthCenterLocation();
+
+    GLint GetHaltonSeq1Location();
+    GLint GetHaltonSeq2Location();
+    GLint GetHaltonSeq3Location();
+    GLint GetHaltonSeq4Location();
+    
     void UseShader();
     
     ~Shader();
@@ -71,6 +77,9 @@ private:
     GLint uniformScreenWidth, uniformScreenHeight;
     // Allow movility of camera:
     GLint uniformEarthCenter;
+    // Halton vectors
+    GLint uniformHaltonSeq1, uniformHaltonSeq2, uniformHaltonSeq3, uniformHaltonSeq4;
+
     void CompileShader(const char * vertexCode, const char * fragmentCode);
     void AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType);
     void ClearShader();

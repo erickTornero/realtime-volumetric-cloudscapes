@@ -17,6 +17,11 @@ Shader::Shader(){
     this->uniformGradientCumulonimbusTexture = 0;
     this->uniformCurlNoiseTexture = 0;
     this->uniformEarthCenter = 0;
+    // Halton vectors
+    this->uniformHaltonSeq1 = 0;
+    this->uniformHaltonSeq2 = 0;
+    this->uniformHaltonSeq3 = 0;
+    this->uniformHaltonSeq4 = 0;
 }
 
 void Shader::CreateFromString(const char * vertexCode, const char * fragmentCode){
@@ -82,6 +87,11 @@ void Shader::CompileShader(const char * vertexCode, const char * fragmentCode){
     //this->uniformGradientCumulonimbusTexture = glGetUniformLocation(shaderID, "GradientCumulonimbusTexture");
     this->uniformCurlNoiseTexture = glGetUniformLocation(shaderID, "CurlNoiseTexture");
     this->uniformEarthCenter = glGetUniformLocation(shaderID, "EarthCenter");
+
+    this->uniformHaltonSeq1 = glGetUniformLocation(shaderID, "HaltonSequence1");
+    this->uniformHaltonSeq2 = glGetUniformLocation(shaderID, "HaltonSequence2");
+    this->uniformHaltonSeq3 = glGetUniformLocation(shaderID, "HaltonSequence3");
+    this->uniformHaltonSeq4 = glGetUniformLocation(shaderID, "HaltonSequence4");
 }
 
 void Shader::AddShader(GLuint theProgram, const char * shaderCode, GLenum shaderType){
@@ -178,6 +188,19 @@ GLint Shader::GetCurlNoiseTextureLocation(){
 GLint Shader::GetEarthCenterLocation(){
     return this->uniformEarthCenter;
 }
+// Halton vectors:
+GLint Shader::GetHaltonSeq1Location(){
+    return this->uniformHaltonSeq1;
+}
+GLint Shader::GetHaltonSeq2Location(){
+    return this->uniformHaltonSeq2;
+}
+GLint Shader::GetHaltonSeq3Location(){
+    return this->uniformHaltonSeq3;
+}
+GLint Shader::GetHaltonSeq4Location(){
+    return this->uniformHaltonSeq4;
+}
 void Shader::UseShader(){
     glUseProgram(this->shaderID);
 }
@@ -205,6 +228,12 @@ void Shader::ClearShader(){
     this->uniformHighFreqTexture = 0;
     this->uniformCurlNoiseTexture = 0;
     this->uniformEarthCenter = 0;
+    
+    //Haton
+    this->uniformHaltonSeq1 = 0;
+    this->uniformHaltonSeq2 = 0;
+    this->uniformHaltonSeq3 = 0;
+    this->uniformHaltonSeq4 = 0;
 }
 std::string Shader::ReadFileShader(const char * fileLoc){
     std::string content;

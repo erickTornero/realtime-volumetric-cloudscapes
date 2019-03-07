@@ -6,10 +6,18 @@ uniform vec3 cameraPosition;
 uniform vec3 cameraFront;
 uniform vec3 cameraUp;
 uniform vec3 cameraRight;
+// Earth center position
+uniform vec3 EarthCenter;
 
 uniform float screenWidth;
 uniform float screenHeight;
 uniform float Time;
+
+// Halton Sequences
+uniform vec4 HaltonSequence1;
+uniform vec4 HaltonSequence2;
+uniform vec4 HaltonSequence3;
+uniform vec4 HaltonSequence4;
 
 uniform sampler3D lowFrequencyTexture;
 uniform sampler3D highFrequencyTexture;
@@ -20,8 +28,8 @@ uniform sampler2D CurlNoiseTexture;
 // Define Global variables used by all the program
 const float MPI = 3.14159265;
 const float EARTH_RADIUS = 6378000.0;
-const float THICK_ATMOSPHERE = 3500.0;
-const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 1500.0;
+const float THICK_ATMOSPHERE = 15000.0;
+const float ATMOSPHERE_INNER_RADIUS = EARTH_RADIUS + 10500.0;
 const float ATMOSPHERE_OUTER_RADIUS = ATMOSPHERE_INNER_RADIUS + THICK_ATMOSPHERE;
 
 // The Sun Location
@@ -48,7 +56,7 @@ vec3 SampleCurlNoiseTexture(vec2 point){
 
 // ** Get ray direction definition
 vec3 GetRayDirection(vec3 front, vec3 right, vec3 up, float x, float y){
-    vec3 ray = 3 * front + right * x + up * y;
+    vec3 ray = 2 * front +  right * x + up * y;
     return normalize(ray);
 }
 // ** Remap function defined by the author of paper
@@ -179,23 +187,43 @@ vec3 GetIntersectionSphereRay(vec3 rayOrigin, vec3 rayDirection, vec3 sphereCent
     vec3 uer = normalize(rayOrigin - sphereCenter);
     // if Intersection = rayOrigin + rayDirection * t
     // The second order equation is:
-    // er^2 + t^2 + er*t*dot(uer, rayDirection) = sphereRadius^2
-    float A = 1.0;
-    float B = 2 * er * dot(uer, rayDirection);
+    // er^2 + t^2 + 2*er*t*dot(uer, rayDirection) = sphereRadius^2
+    float A = dot(rayDirection, rayDirection);
+    float B = 2.0 * er * dot(uer, rayDirection);
     float C = er * er - sphereRadius * sphereRadius;
     // Define the discriminant
     float discriminant = B * B - 4 * A * C;
     // Solve for t the equation
     float t;
     if(discriminant < 0.0)
-        return vec3(0.0);
+        t = 0.0;
     else{
         t = (-B - sqrt(discriminant))/(2.0 * A);
         if(t < 0.0)
             t = (-B + sqrt(discriminant))/(2.0 * A);
+            if(t < 0.0)
+                t = 0.0; 
     }
+    // Second Way test:
+    /*vec3 uer = (rayOrigin - sphereCenter)/sphereRadius;
+    float A = dot(rayDirection, rayDirection);
+    float B = 2 * dot(uer, rayDirection);
+    float C = dot(uer, uer) - 1.0;
+    float discriminant = B * B - 4 * A * C;
+    float t;
+    if(discriminant < 0.0)
+        t = 0.0;
+    else{
+        t = (-B - sqrt(discriminant))/(2.0 * A);
+        if(t < 0.0)
+            t = (-B + sqrt(discriminant))/(2.0 * A);
+            if(t < 0.0){
+                t = 0.0; 
+            }
+    }*/
 
-    return rayOrigin + t * rayDirection;
+
+    return rayOrigin + t  * rayDirection;
 }
 
 // Get point sampling 3D texture
@@ -210,21 +238,21 @@ vec3 GetPositionInAtmosphere(vec3 pos, vec3 earthCenter, float thickness){
 // Get the point of weather texture to sample
 
 vec2 GetRelativePointToWeatherMap(vec3 positionInDome, vec3 eyePosition, vec3 domeCenter, float radiusDome){
-    float r = length(eyePosition - domeCenter);
+    float r = EARTH_RADIUS;
     float dist = sqrt(radiusDome*radiusDome - r * r);
-    vec3 posXmin = eyePosition + vec3(-1.0, 0.0, 0.0) * dist;
-    vec3 posZmin = eyePosition + vec3(0.0, 0.0, -1.0) * dist;
+    vec3 posXmin = domeCenter + vec3(-dist, r,  0.0 );
+    vec3 posZmin = domeCenter + vec3(0.0  , r, -dist);
     
     posXmin.y = 0.0;
     posZmin.y = 0.0;
     positionInDome.y = 0.0;
 
-    float posx = (positionInDome.x - posXmin.x) / (2.0 * dist); 
-    float posz = (positionInDome.z - posZmin.z) / (2.0 * dist);
+    float posx = abs(positionInDome.x - posXmin.x)/ (2.0 * dist); 
+    float posz = abs(positionInDome.z - posZmin.z)/ (2.0 * dist);
 
     //float posx = length(positionInDome - posXmin)/(2 * dist);
     //float posy = length(positionInDome - posZmiz)/(2 * dist);
-    vec2 pointSample = vec2(posx, posz);
+    vec2 pointSample = vec2(posx, posz) * 1.00;
     return pointSample;
 }
 
@@ -243,11 +271,11 @@ float HenyeyGreenstein(in vec3 inLightVector, in vec3 inViewVector, in float g){
 
 // ** Define the total energy 
 float GetLightEnergy(float density, float probRain, float henyeyGreensteinFactor){
-    float beer_laws = 2.0 * exp( -density * probRain);
+    float beer_laws = exp( -density * probRain);
     float powdered_sugar = 1.0 - exp( -2.0 * density);
 
     //float henyeyGreensteinFactor = HenyeyGreenstein(lightVector, rayDirection, g);
-    float totalEnergy = beer_laws * powdered_sugar * henyeyGreensteinFactor;
+    float totalEnergy = 2.0 * beer_laws * powdered_sugar * henyeyGreensteinFactor;
 
     return totalEnergy;
 }
@@ -284,28 +312,32 @@ vec3 [6] GetNoiseKernel(vec3 lightDirection){
 // SampleCloudDensity
 float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeight, bool ischeap){
     // Add movement to textures
-    vec3 wind_direction = vec3(1.0, 0.0, 0.0);
-    float cloud_speed = 5.0;
-
-    float cloud_top_offset = 1.0;
-
-    // Skew in wind direction
-
-    samplepoint += relativeHeight * wind_direction * cloud_top_offset * 0.00005;
-    samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.001;
+    //vec3 wind_direction = vec3(1.0, 0.0, 0.0);
+    //float cloud_speed = 10.0;
+//
+    //float cloud_top_offset = 5.0;
+//
+    //// Skew in wind direction
+//
+    //samplepoint += relativeHeight * wind_direction * cloud_top_offset * 0.00005;
+    //samplepoint += (wind_direction + vec3(0.0, 1.0, 0.0))* Time * cloud_speed * 0.0001;
 
 
     // Init Low Frequency Sampling ...
     vec4 low_frequency_noises = SampleLowFrequencyTexture(samplepoint);
 
     // Perly Worley noise:
-    float low_freq_FBM = low_frequency_noises.y * 0.625 + 
-                         low_frequency_noises.z * 0.250 +
-                         low_frequency_noises.w * 0.125;
+    float low_freq_FBM = low_frequency_noises.g * 0.625 + 
+                         low_frequency_noises.b * 0.250 +
+                         low_frequency_noises.a * 0.125;
+
+
+    low_freq_FBM = clamp(low_freq_FBM, 0.0, 1.0);
+
 
     // Remap with worley noise
-    float base_cloud = Remap(low_frequency_noises.x, -(1.0 - low_freq_FBM), 1.0, 0.0, 1.0);
-
+    float base_cloud = Remap(low_frequency_noises.r, -(1.0 - low_freq_FBM), 1.0, 0.0, 1.0);
+    //base_cloud = clamp(base_cloud, 0.0, 1.0);
     //Get the gradient density
     float density_height_gradient = GetDensityHeightGradientForPoint(samplepoint, weather_data, relativeHeight);
 
@@ -314,8 +346,9 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
     base_cloud = base_cloud * density_height_gradient;
 
     // Apply the coverage of data
-    float cloud_coverage = weather_data.x;
-    base_cloud = clamp(base_cloud, cloud_coverage, 1.0);
+    float cloud_coverage = weather_data.r;
+    //cloud_coverage = clamp(cloud_coverage, 0.0, base_cloud)
+    //base_cloud = clamp(base_cloud, cloud_coverage, 1.0);
     float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
     base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     // Get more aestheticcal cloud
@@ -328,22 +361,22 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
     if(!ischeap && base_cloud_with_coverage > 0.0){
         // sample high frequency texture
         vec3 curl_noise = SampleCurlNoiseTexture(samplepoint.xy);
-        samplepoint.xy = samplepoint.xy + curl_noise.xy * (1.0 - relativeHeight) * 0.5;
-        vec3 high_frequency_noises = SampleHighFrequencyTexture(samplepoint);
+        samplepoint.xy = samplepoint.xy + curl_noise.xy * (1.0 - relativeHeight);
+        vec3 high_frequency_noises = SampleHighFrequencyTexture(samplepoint * 0.1);
 
-        float high_freq_FBM =     (high_frequency_noises.x * 0.625 )
-                                + (high_frequency_noises.y * 0.250 )
-                                + (high_frequency_noises.z * 0.125 );
+        float high_freq_FBM =     (high_frequency_noises.r * 0.625 )
+                                + (high_frequency_noises.g * 0.250 )
+                                + (high_frequency_noises.b * 0.125 );
 
         // TODO: Paper propose other way to compute the height_fraction
         float high_freq_noise_modifier = mix(high_freq_FBM, 1.0 - high_freq_FBM, clamp(relativeHeight * 10.0, 0.0, 1.0));
         //high_freq_noise_modifier *= 0.35 * exp(-cloud_coverage * 0.75);
-        
-        high_freq_noise_modifier = clamp(high_freq_noise_modifier, 0.0, 1.0);
-        base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.005 * high_freq_noise_modifier, 1.0);
+        //base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.2*high_freq_noise_modifier, 1.0);
+        //high_freq_noise_modifier = clamp(high_freq_noise_modifier, 0.0, 1.0);
+        base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.2 * high_freq_noise_modifier, 1.0);
         // Erode by remapping:
-        final_cloud = Remap(base_cloud_with_coverage, 0.005 * high_freq_noise_modifier, 1.0, 0.0, 1.0);
-        final_cloud = clamp(final_cloud, 0.0, 1.0);
+        final_cloud = Remap(base_cloud_with_coverage, 0.2 * high_freq_noise_modifier, 1.0, 0.0, 1.0);
+        //final_cloud = clamp(final_cloud, 0.0, 1.0);
     }
 
     return final_cloud;
@@ -369,12 +402,52 @@ float SampleCloudDensityAlongCone(vec3 posInAtm, vec3 rayOrigin, vec3 earthCente
 
         vec3 p = GetPositionInAtmosphere(lightpos, earthCenter, THICK_ATMOSPHERE)*0.5;
         // Sample cloud density:
-        density_along_cone += SampleCloudDensity(p, weather_data, relativeHeight, true);
+        density_along_cone += SampleCloudDensity(p, weather_data, relativeHeight, false);
     }
 
     return density_along_cone;
 }
 
+//* Test Jitter options_
+vec2 getJitterOffset (int index, vec2 dim) 
+{
+    //index is a value from 0-15
+    //Use pre generated halton sequence to jitter point --> halton sequence is a low discrepancy sampling pattern
+    vec2 jitter = vec2(0.0);
+    index = index/2;
+    if(index < 4)
+    {
+        jitter.x = HaltonSequence1[index];
+        jitter.y = HaltonSequence2[index];
+    }
+    else
+    {
+        index -= 4;
+        jitter.x = HaltonSequence3[index];
+        jitter.y = HaltonSequence4[index];
+    }
+    return jitter/dim;
+}
+float getJitterOffset (in int index, float maxOffset) 
+{
+    //index is a value from 0-15
+    //Use pre generated halton sequence to jitter point --> halton sequence is a low discrepancy sampling pattern
+    float jitter = 0.0;
+    index = index/2;
+    if(index < 4)
+    {
+        jitter = HaltonSequence1[index];
+    }
+    else
+    {
+        index -= 4;
+        jitter = HaltonSequence2[index];
+    }
+    return jitter*maxOffset;
+}
+
+
+//* End jitter options
 
 // ** Ray marching algorithm
 
@@ -389,29 +462,39 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
     float stepsize                  = float(thick_/sample_cout);
     float start_                    = length(startPoint - rayOrigin);
     float end_                      = length(endPoint   - rayOrigin);
-    vec3 stepSampling               = rayDirection/sample_cout;
+    if(end_ < start_){
+        float tmp = start_;
+        start_ = end_;
+        end_ = tmp;
+    }
+    vec3 stepSampling               = rayDirection/float(sample_cout);
 
     // Henyey Greenstein factor in light Sampling
     // Ray Light direction
+    vec3 testsize                   = rayDirection/float(sample_cout);
 
     vec3 lightDirection             = normalize(SunLocation - rayOrigin);
     // g: eccentricity 0.2, proposed by paper
-    float henyeyGreensteinFactor    = HenyeyGreenstein(lightDirection, rayDirection, 0.3);
+    float henyeyGreensteinFactor    = HenyeyGreenstein(lightDirection, rayDirection, 0.6);
     // Get the noise Kernell size 6
     vec3 noise_kernel[6]            = GetNoiseKernel(lightDirection);
 
+    vec3 samplepoint = vec3(0.5, 0.5, 0.0);
     // Start the raymarching loop
     //vec3 samplepoint = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
     for(float t = start_; t < end_; t += stepsize){
-        vec3 posInAtm = rayOrigin + t * rayDirection;
+        vec2 jitterLoc = getJitterOffset(1, vec2(80.0));
+        vec3 posInAtm = rayOrigin + t * (rayDirection + vec3(jitterLoc.x, (jitterLoc.x + jitterLoc.y)*4.0, jitterLoc.y));
         // Sample the cloud data
-        vec3 samplepoint            = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
+        //vec3 samplepoint            = GetPositionInAtmosphere(posInAtm, earthCenter, thick_);
         vec2 weatherpoint           = GetRelativePointToWeatherMap(posInAtm, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
         vec3 weather_data           = SampleWeatherTexture(weatherpoint);
         float relativeHeight        = GetRelativeHeightInAtmosphere(posInAtm, earthCenter);
         //float relativeHeight = GetHeightInAtmosphere(posInAtm, earthCenter, startPoint, rayDirection, rayOrigin, thick_);
         // Start with light test 
         if(cloud_test > 0.0){
+            samplepoint += testsize;
+            samplepoint /=8.0;
             //samplepoint = KeepInBox(samplepoint);
             float sampled_density = SampleCloudDensity(samplepoint, weather_data, relativeHeight, false);
             if(sampled_density == 0.0)
@@ -423,18 +506,18 @@ vec3 RayMarch(vec3 rayOrigin, vec3 startPoint, vec3 endPoint, vec3 rayDirection,
                 if(sampled_density != 0.0){
                     // Make the Light Sampling
                     float precipitation;
-                    if(weather_data.z > 0.9) precipitation = 15.0;
+                    if(weather_data.z > 0.9) precipitation = 5.0;
                     else if(weather_data.z < 0.1) precipitation = 0.05;
-                    else precipitation = 5.0;
+                    else precipitation = 2.0;
 
                     float density_along_light_ray = SampleCloudDensityAlongCone(posInAtm, rayOrigin, earthCenter, stepsize, noise_kernel);
                     float totalEnergy = GetLightEnergy(density_along_light_ray, precipitation, henyeyGreensteinFactor); 
                     float transmitance = 1.0;
-                    transmitance = mix(transmitance, totalEnergy, (1.0 - density));
-
-                    //colorpixel += vec3(transmitance * 0.06);
-                    
-                    colorpixel += vec3(totalEnergy * 1.0);
+                    transmitance = mix(density, totalEnergy, (1.0 - density_along_light_ray));
+                    //transmitance = clamp(transmitance, 0.0, 1.0);
+                    colorpixel += vec3(transmitance * 0.2);
+                    //colorpixel += vec3(sampled_density);
+                    //colorpixel += vec3(totalEnergy * 1.0);
                 }
                 //samplepoint += stepSampling;
                 //t += stepsize;
@@ -482,15 +565,21 @@ void main(){
 
     vec3 rayDirection       = GetRayDirection(cameraFront, cameraRight, cameraUp, x, y);
     
-    vec3 earthCenter        = vec3(rayOrigin.x, rayOrigin.y - EARTH_RADIUS, rayOrigin.z);
-
+    //vec3 earthCenter        = vec3(rayOrigin.x, rayOrigin.y - EARTH_RADIUS, rayOrigin.z);
+    vec3 earthCenter        = EarthCenter;
     vec3 innerIntersection  = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_INNER_RADIUS);
     vec3 outerIntersection  = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+
 
     if(dot(vec3(0.0, 1.0, 0.0), rayDirection) < 0.0){
         vec3 colorNearHorizon = vec3(0.54, 0.23, 0.046) * 0.4;
         color =  vec4(colorNearHorizon, 1.0);
         return;
+    }
+    else if(dot(vec3(0.0, 1.0, 0.0), rayDirection) < 0.06){
+        //vec3 colorNearHorizon = vec3(0.1, 0.1, 0.1);
+        //color = vec4(colorNearHorizon, 1.0);
+        //return;
     }
 
     vec3 skycolor = vec3(0.054687, 0.3, 0.57);
@@ -501,15 +590,16 @@ void main(){
     sunFactorEnergy = exp(2000.0 * (sunFactorEnergy - 1.0));
     vec3 sunColor = vec3(0.9608, 0.9529, 0.9137);
 
-    //skycolor = mix(skycolor, sunColor, sunFactorEnergy);
+    skycolor = mix(skycolor, 2.0 * sunColor, sunFactorEnergy);
 
-
+    
     float density = 0.0;
     
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter, density);
 
-    vec3 sk_c = mix(col,  10.0 * sunColor, sunFactorEnergy);
-    vec3 col_sky_ = mix(skycolor, sk_c * 2.0, density);
+    //vec3 sk_c = mix(col,  10.0 * sunColor, sunFactorEnergy);
+    vec3 col_sky_ = mix(skycolor, col, density);
+    
     //vec3 col_sky_ = mix(skycolor * 1.5, col, density);
     
     //col.x = Remap(skycolor.x, 0.0, col.x, 0.0, 1.0);
@@ -521,9 +611,18 @@ void main(){
     //col.y = clamp(col.y, 0.0, 1.0);
     //col.z = clamp(col.z, 0.0, 1.0);
 
-    
+    //vec4 cc = SampleLowFrequencyTexture(vec3(vec2(x,y), 0.0));
+    //color = vec4(cc.w, cc.w, cc.w, 1.0);
     //vec3 col = SampleCurlNoiseTexture(vec2(x, y)*0.5 + 0.5);
     //vec3 col = vec3(density, density, density);
     //color = vec4(col.xy, 0.0, 1.0);
+
+    // Debug WeatherMap
+    //vec2 wp = GetRelativePointToWeatherMap(outerIntersection, rayOrigin, earthCenter, ATMOSPHERE_OUTER_RADIUS);
+
+
+    //vec3 c = SampleWeatherTexture(wp);
+    //vec3 c = SampleWeatherTexture(vec2(x, y) * 0.5 + 0.5);
+    //color = vec4(c, 1.0);
     color = vec4(col_sky_, 1.0);
 }
