@@ -353,7 +353,7 @@ float SampleCloudDensity(vec3 samplepoint, vec3 weather_data, float relativeHeig
     float base_cloud_with_coverage = Remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
     base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     // Get more aestheticcal cloud
-    base_cloud_with_coverage *= cloud_coverage;
+    base_cloud_with_coverage *= cloud_coverage*4.0;
 
     //base_cloud_with_coverage = clamp(base_cloud_with_coverage, 0.0, 1.0);
     
@@ -643,7 +643,7 @@ void main(){
     float density = 0.0;
     
     vec3 col = RayMarch(rayOrigin, innerIntersection, outerIntersection, rayDirection, earthCenter, density);
-
+    col *= 0.04;
     density *= smoothstep(0.0, 1.0, min(1.0, Remap(rayDirection.y, 0.06, 0.4, 0.0, 1.0)));
     //vec3 sk_c = mix(col,  10.0 * sunColor, sunFactorEnergy);
     vec3 col_sky_ = mix(skycolor, col, density);
