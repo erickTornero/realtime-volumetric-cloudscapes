@@ -762,8 +762,9 @@ void main(){
     vec3 innerIntersection  = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_INNER_RADIUS);
     vec3 outerIntersection  = GetIntersectionSphereRay(rayOrigin, rayDirection, earthCenter, ATMOSPHERE_OUTER_RADIUS);
 
-
-    if(dot(vec3(0.0, 1.0, 0.0), rayDirection) < 0.0){
+    float anglesea = acos(dot(rayDirection ,vec3(0.0,1.0,0.0)));
+    
+    if(dot(vec3(0.0, 1.0, 0.0), rayDirection) < 0.0 && (rayOrigin.y - earthCenter.y - EARTH_RADIUS) * tan(anglesea) < 600.0){
         //vec3 colorNearHorizon = vec3(0.54, 0.23, 0.046) * 0.4;
         //color =  vec4(colorNearHorizon, 1.0);
         vec2 iResolution = vec2(screenWidth, screenHeight);
