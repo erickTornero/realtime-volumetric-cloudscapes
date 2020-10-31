@@ -13,6 +13,10 @@ Implement the method by Andrew Schneider in GPU pro 7 (2016)
 
 ![Base Clouds](gImages/cloudshape1.png)
 
+* Shape of clouds in dark sky
+
+![Dark Sky](gImages/blackclouds.gif)
+
 * Light Clouds
 
 ![Light Clouds](gImages/light_clouds.png)
@@ -24,3 +28,7 @@ Implement the method by Andrew Schneider in GPU pro 7 (2016)
 * Sun model
 
 ![Sun Clouds](gImages/sun_clouds1.gif)
+
+* Rainy Clouds over time
+
+![Rainy Clouds](gImages/move_clouds.gif)
